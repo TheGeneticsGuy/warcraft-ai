@@ -1,0 +1,9 @@
+[build]
+  # Your usual build command
+  command = "npm run build"
+  # The directory Vite outputs to
+  publish = "dist"
+
+[functions]
+  # Directory where your serverless functions live
+  directory = "netlify/functions"

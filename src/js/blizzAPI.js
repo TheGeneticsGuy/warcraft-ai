@@ -1,43 +1,37 @@
-// src/js/blizzAPI.js
-import ENV from './env.js';
-
-async function getKeys() {
-  try {
-    return {
-      client_id: ENV.CLIENT_ID,
-      client_secret: ENV.CLIENT_SECRET,
-    };
-  } catch (error) {
-    console.error('Error getting keys:', error);
-  }
-}
-
 async function getAccessToken() {
-  const keys = await getKeys();
-  console.log('Keys:', keys); // Debug: Check what client_id and client_secret are
-  if (keys) {
-    const { client_id, client_secret } = keys;
-    const url = 'https://us.battle.net/oauth/token';
-    const auth = btoa(`${client_id}:${client_secret}`);
-    console.log('Auth Header:', `Basic ${auth}`); // Debug: Check the encoded auth
-    try {
-      const tokenResponse = await fetch(url, {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'grant_type=client_credentials',
-      });
-      if (tokenResponse.ok) {
-        const data = await tokenResponse.json();
-        return data.access_token;
-      } else {
-        throw new Error(await tokenResponse.text());
-      }
-    } catch (error) {
-      console.log(error);
+  try {
+    // Call your Netlify Function endpoint to keep ID secret
+    const response = await fetch('/.netlify/functions/get-bnet-token');
+
+    if (!response.ok) {
+      // Try to get error details from the function's response
+      const errorData = await response
+        .json()
+        .catch(() => ({
+          error: 'Failed to fetch token and parse error response.',
+        }));
+      console.error(
+        'Error fetching token from Netlify function:',
+        response.status,
+        errorData,
+      );
+      throw new Error(
+        errorData.error || `HTTP error! status: ${response.status}`,
+      );
     }
+
+    const data = await response.json();
+    if (data.access_token) {
+      return data.access_token;
+    } else {
+      throw new Error(
+        'Access token not found in response from Netlify function.',
+      );
+    }
+  } catch (error) {
+    console.error('Error getting access token:', error);
+    // Handle the error appropriately in your UI, maybe return null or rethrow
+    return null;
   }
 }
 

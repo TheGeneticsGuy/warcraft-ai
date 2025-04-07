@@ -5,7 +5,7 @@ async function getKeys() {
   try {
     return {
       client_id: ENV.CLIENT_ID,
-      client_secret: ENV.CLIENT_SECRET,
+      client_secret: ENV.CLIENT_SECRET
     };
   } catch (error) {
     console.error('Error getting keys:', error);
@@ -24,10 +24,10 @@ async function getAccessToken() {
       const tokenResponse = await fetch(url, {
         method: 'POST',
         headers: {
-          Authorization: `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'grant_type=client_credentials',
+        body: 'grant_type=client_credentials'
       });
       if (tokenResponse.ok) {
         const data = await tokenResponse.json();

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Warcraft Realms</title>
+
+    <!-- STYLE SHEETS -->
+    <link rel="stylesheet" href="../css/realms.css" />
+    <link rel="stylesheet" href="../css/realms-large.css" />
+
+    <!-- JS Entry Point -->
+    <script type="module" src="../js/realms-main.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" href="/images/favicon.ico" />
+    <!-- META properties Facebook -->
+    <!-- <meta property="og:title" content="Aaron Topping">
+     <meta property="og:type" content="website">
+     <meta property="og:url" content="https://thegeneticsguy.github.io/warcraft_ai_report/project">
+     <meta property="og:image" content="https://thegeneticsguy.github.io/warcraft_ai_report/images/Aaron.webp">
+     <meta property="og:description" content="WDD 231 Aaron Topping - Final Project - Warcraft Realms"> -->
+
+    <!-- Twitter Card tags -->
+    <!-- <meta name="twitter:card" content="summary">
+     <meta name="twitter:title" content="Aaron Topping">
+     <meta name="twitter:description" content="WDD 231 Aaron Topping - Final Project - Warcraft Realms">
+     <meta name="twitter:image" content="https://thegeneticsguy.github.io/warcraft_ai_report/images/Aaron.webp">
+     <meta name="twitter:url" content="https://thegeneticsguy.github.io/warcraft_ai_report/project"> -->
+</head>
+
+<body>
+    <header class="divider" id="main-header"></header>
+
+    <main>
+        <div id="main_body">
+            <h2 id="realms-header">WARCRAFT REALMS</h2>
+            <div id="upper_main">
+                <div>
+                    <div id="filter-button-container">
+                        <button class="filter-button" id="retail-button">Retail</button>
+                        <button class="filter-button" id="classic-button">
+                            Cataclysm
+                        </button>
+                        <button class="filter-button" id="classicEra-button">
+                            Classic Era
+                        </button>
+                    </div>
+                </div>
+                <div id="right-upper-main">
+                    <div class="filter-dropdown">
+                        <p>Region</p>
+                        <select id="region-select" class="dropdown">
+                            <option value="us">North America (us)</option>
+                            <option value="eu">Europe (eu)</option>
+                            <option value="kr">Korea (kr)</option>
+                            <option value="tw">Taiwan (tw)</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown">
+                        <p>Locale</p>
+                        <select id="locale-select" class="dropdown">
+                            <option value="en_US">English (en_US)</option>
+                            <option value="fr_FR">Français (fr_FR)</option>
+                            <option value="de_DE">Deutsch (de_DE)</option>
+                            <option value="es_ES">Español (Spain) (es_ES)</option>
+                            <option value="es_MX">Español (Americas) (es_MX)</option>
+                            <option value="ru_RU">Русский (ru_RU)</option>
+                            <option value="pt_BR">Português (Brasil) (pt_BR)</option>
+                            <option value="it_IT">Italiano (it_IT)</option>
+                            <option value="ko_KR">한국어 (ko_KR)</option>
+                            <option value="zh_TW">繁體中文 (zh_TW)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="lower-main">
+                <p>Realms Showing: <span id="num-realms"></span></p>
+                <p id="modal-click-msg">Click Realm for Details</p>
+                <div id="lower_main_grid"></div>
+
+                <dialog id="realm-details"></dialog>
+            </div>
+        </div>
+
+        <!-- Divider at bottom above footer -->
+        <div class="divider-footer"></div>
+    </main>
+</body>
+
+<footer id="main-footer"></footer>
+
+</html>

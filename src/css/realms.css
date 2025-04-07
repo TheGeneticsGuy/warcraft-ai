@@ -1,0 +1,888 @@
+:root {
+  --header-footer-color: #ffdda9;
+  --nav-color: #444;
+  --button-color: #473d3a;
+  --secondary-color: #b25e39;
+
+  /* Text Color */
+  --primarytext-color: black;
+  --secondarytext-color: #f3f3f3;
+
+  --heading-font: 'Playfair Display', serif;
+  --paragraph-font: 'PT Serif', serif;
+}
+
+* {
+  margin: 0;
+}
+
+/* HEADER AND NAV */
+#header-container {
+  background-color: var(--header-footer-color);
+  display: grid;
+  justify-content: center;
+  background: var(--header-footer-color);
+  max-width: 100%;
+  width: 100%;
+}
+
+#header-top {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  align-items: stretch;
+  min-height: 150px;
+  margin: 0 auto;
+}
+
+header h1 {
+  color: var(--header-font-color);
+  padding: 20px;
+}
+
+#header_title {
+  font-size: 20px;
+  font-weight: 550;
+}
+
+#header-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  min-width: 500px;
+}
+
+header img {
+  margin: 0;
+  height: auto;
+  max-width: 256px;
+  padding-left: 0px;
+}
+
+nav {
+  width: 100%;
+  background-color: #444;
+}
+
+#nav-container {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.navigation {
+  display: flex;
+  flex-direction: column;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  max-width: 1700px;
+  /* Slightly higher width for aesthetics */
+}
+
+.navigation li {
+  flex: 1;
+  text-align: center;
+  font-size: 1.2rem;
+  display: none;
+}
+
+.navigation.open li {
+  display: block;
+}
+
+.navigation li a {
+  display: block;
+  padding: 1rem;
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.navigation a {
+  font-size: 1.5rem;
+}
+
+.navigation a span {
+  color: #71ffff;
+}
+
+.navigation li a:hover {
+  background-color: #fff;
+  color: #000;
+}
+
+/* ANIMATION */
+@keyframes slide-in {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+ul li {
+  opacity: 0;
+  /* Ensure items are hidden initially */
+  animation: slide-in 0.5s ease-out forwards;
+}
+
+/* Add delay for sequential animation */
+/* NAV ANIMATION */
+ul li:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+ul li:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+ul li:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* Hamburger */
+.icon-menu {
+  width: 35px;
+  height: 30px;
+  margin: 10px 10px;
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.icon-menu span {
+  background-color: #fff;
+  position: absolute;
+  border-radius: 2px;
+  transition: 0.3s cubic-bezier(0.8, 0.5, 0.2, 1.4);
+  width: 100%;
+  height: 4px;
+}
+
+.icon-menu span:nth-child(1) {
+  top: 0px;
+  left: 0px;
+}
+
+.icon-menu span:nth-child(2) {
+  top: 13px;
+  left: 0px;
+}
+
+.icon-menu span:nth-child(3) {
+  bottom: 0px;
+  left: 0px;
+}
+
+.icon-menu:not(.open):hover span:nth-child(1) {
+  transform: scaleY(1.2);
+  left: -5px;
+}
+
+.icon-menu:not(.open):hover span:nth-child(2) {
+  transform: rotate(5deg) scaleY(1.1);
+}
+
+.icon-menu:not(.open):hover span:nth-child(3) {
+  transform: scaleY(1.2);
+  left: 5px;
+}
+
+.icon-menu.open span:nth-child(1) {
+  transform: rotate(45deg) scaleX(0.7);
+  top: 13px;
+  left: -8px;
+}
+
+.icon-menu.open span:nth-child(2) {
+  transform: scale(0);
+  transition-duration: 50ms;
+}
+
+.icon-menu.open span:nth-child(3) {
+  transform: rotate(-45deg) scaleX(0.7);
+  top: 13px;
+  left: 7px;
+}
+
+/* HOME PAGE REALMS - MAIN FILTERS */
+
+#main_body {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  max-width: 1700px;
+  width: 100%;
+}
+
+#upper_main {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin: 1rem;
+  padding: 1rem;
+}
+
+#filter-button-container {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+#right-upper-main {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 1.5rem;
+  align-items: center;
+  margin-left: 0;
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+
+.filter-button {
+  position: relative;
+  /* Needed for positioning the pseudo-elements */
+  width: auto;
+  min-width: 260px;
+  height: 3rem;
+  font-family: var(--paragraph-font);
+  font-weight: 700;
+  background-color: var(--nav-color);
+  color: #fff;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  margin-top: 2rem;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 1px 5px 5px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s;
+}
+
+.filter-button::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 3px;
+  /* Thickness of the line */
+  background-color: red;
+  transition: width 0.3s ease;
+}
+
+.filter-button:hover::after {
+  width: 100%;
+}
+
+.filter-button:hover {
+  background-color: #0056b3;
+}
+
+.filter-button.selected::after {
+  width: 100%;
+  transition: none;
+}
+
+.filter-button.selected {
+  background-color: #0056b3;
+}
+
+.filter-dropdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: var(--paragraph-font);
+}
+
+.filter-dropdown p {
+  margin: 0 0 0.5rem 0;
+  font-weight: bold;
+  text-align: left;
+}
+
+.dropdown {
+  position: relative;
+  width: 260px;
+  height: 3rem;
+  font-family: var(--paragraph-font);
+  font-weight: 700;
+  background-color: var(--nav-color);
+  color: #fff;
+  padding: 0.5rem;
+  padding-left: 1rem;
+  margin: 0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: 1px 5px 5px 2px rgba(0, 0, 0, 0.5);
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
+  appearance: none;
+}
+
+.dropdown:hover {
+  background-color: #0056b3;
+}
+
+.dropdown:focus {
+  outline: none;
+  outline: 2px solid red;
+}
+
+.dropdown option {
+  background-color: var(--nav-color);
+  color: #fff;
+}
+
+/* --------------- CORE GRID --------------------- */
+
+#lower-main {
+  display: grid;
+  margin: 0 auto;
+  max-width: 1200px;
+  width: 90%;
+  padding: 1rem;
+}
+
+/* Trying to give it a "frosty" frozen feel */
+#main_body h2 {
+  text-align: center;
+  font-size: 4rem;
+  padding-top: 2rem;
+  margin: 0;
+  color: #00547a;
+  text-shadow:
+    0 0 25px rgba(30, 129, 176, 0.9),
+    3px 3px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 3px;
+}
+
+#realms-header:hover {
+  transform: none;
+}
+
+#lower_main_grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 80%;
+  overflow-x: auto;
+  /* white-space: nowrap; */
+  margin: 0 auto;
+}
+
+.realm-item {
+  animation: fadeIn 0.5s ease-in-out;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  padding: 15px;
+  margin: 5px;
+  background-color: #e7e7e7;
+  border-radius: 5px;
+  font-size: 1.5rem;
+  box-shadow: 1px 2px 2px 2px rgba(0, 0, 0, 0.5);
+  gap: 5px;
+  min-width: 200px;
+  cursor: pointer;
+}
+
+.realm-item:hover {
+  background-color: #e8e8e8;
+}
+
+.realm-name {
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.realm-status {
+  text-align: center;
+}
+
+.realm-status.status-up,
+.status-up {
+  color: #188145;
+  font-weight: bold;
+}
+
+.realm-status.status-down,
+.status-down {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.realm-population {
+  text-align: center;
+  font-weight: bold;
+}
+
+.realm-status,
+.realm-population {
+  display: none;
+}
+
+.grid-header {
+  font-size: 2.5em;
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+.grid-header .realm-status.status-up {
+  color: black;
+}
+
+#lower-main p {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+#lower-main span {
+  color: #7a0000;
+}
+
+#modal-click-msg {
+  display: grid;
+  font-size: 1.25rem !important;
+}
+
+/* Fade-in animation */
+/* This animation is to make it obvious when realms refreshed */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* MODAL LOGIC */
+
+/* MODALS */
+
+dialog {
+  max-width: 450px;
+  width: 90%;
+  border: 1px solid rgb(0 0 0 / 0.8);
+  box-shadow: 0 0 2em rgb(0 0 0 / 0.3);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  border-radius: 15px;
+  font-family: var(--paragraph-font);
+}
+
+dialog button {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgb(0 0 0 / 0.1);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+dialog button:hover {
+  background-color: transparent;
+}
+
+#lower-main h2 {
+  font-size: 3rem;
+  padding: 0 3rem 0 3rem;
+  margin: 5px;
+}
+
+#lower-main h2:hover {
+  transform: none;
+}
+
+#modal-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 40px;
+  padding: 0.5rem;
+}
+
+#modal-wrapper p {
+  text-align: left;
+  padding: 5px;
+}
+
+#modal-left {
+  font-weight: bold;
+  text-decoration: underline;
+  text-align: right;
+}
+
+#modal-divider {
+  display: flex;
+  width: 100%;
+  background-color: var(--secondary-color);
+  height: 5px;
+  padding: 0;
+  margin: 0;
+}
+
+.dialog h2 {
+  transition: none;
+  transform: none;
+}
+
+.dialog h2:hover {
+  transform: none;
+}
+
+/* ---------------------- WOW TOKEN PAGE 2 ------------------ */
+
+.full_body {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
+  background-color: var(--nav-color);
+  align-items: center;
+}
+
+.hero {
+  max-width: 2000px;
+}
+
+.hero {
+  position: relative;
+  /* I MIGHT add some layered content - not sure yet*/
+  width: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.hero img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  display: block;
+  /* Removes any whitespace around the image */
+}
+
+/* -- BELOW THE HERO IMG --  */
+
+.token-details {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
+  background-color: var(--header-footer-color);
+  align-items: center;
+  padding: 1rem;
+}
+
+.token-details h2 {
+  font-size: 5rem;
+  text-align: center;
+}
+
+.token-details {
+  font-size: 2rem;
+  text-align: center;
+}
+
+/* ------- WOW TOKEN CARDS -------- */
+
+/* Wrapper for the entire grid */
+.token-grid-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 20px;
+  max-width: 1700px;
+}
+
+.toke-price-header {
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin: 0 0 10px;
+}
+
+#token-grid-retail,
+#token-grid-classic {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.token-price-section {
+  background: #f7f7f7;
+  border-radius: 10px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transform: scale(1);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  min-width: 300px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  opacity: 0;
+  transform: translateY(20px);
+  /* Start slightly below */
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.token-price-section:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+#card-top,
+#card-bottom {
+  background: #e0e0e0;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+#card-mid {
+  background: linear-gradient(45deg, #ffd700, #fff);
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+#card-top img,
+#card-mid img {
+  margin-left: 8px;
+}
+
+#card-top p,
+#card-mid p,
+#card-bottom p {
+  margin: 0;
+  text-align: center;
+}
+
+#card-top p {
+  padding-left: 10px;
+}
+
+/* Apply staggered animation */
+.token-price-section:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.token-price-section:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.token-price-section:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.token-price-section:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+/* Animating card load */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ----------- FINAL PAGE ADDONS ------------ */
+
+#addon-main-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 1700px;
+  margin: 0 auto;
+}
+
+#addon-header {
+  text-align: center;
+  font-size: 6vh;
+  padding: 1rem;
+  font-family: var(--heading-font);
+}
+
+#author-header {
+  text-align: center;
+  font-size: 2.5vh;
+  font-family: var(--paragraph-font);
+}
+
+.addon-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  padding: 20px;
+  justify-content: center;
+}
+
+.addon-card {
+  background-color: var(--secondarytext-color);
+  border-radius: 8px;
+  box-shadow: 2px 4px 8px 2px rgba(0, 0, 0, 0.1);
+  width: calc(33.333% - 20px);
+  min-width: 380px;
+  /* I want each to take up 1/3 */
+  box-sizing: border-box;
+  padding: 20px;
+  text-align: center;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease-in-out;
+}
+
+.addon-card:hover {
+  transform: none;
+}
+
+.addon-card img {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+}
+
+.addon-card img:hover {
+  transform: rotate(720deg);
+}
+
+.addon-card h2 {
+  margin: 20px 0 10px;
+  font-size: 1.5rem;
+  font-family: var(--heading-font);
+}
+
+.addon-card p {
+  color: #555;
+  font-family: var(--paragraph-font);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.addon-card a {
+  display: block;
+  margin-top: 10px;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.addon-card a:hover {
+  text-decoration: underline;
+}
+
+.divider-footer {
+  width: 100%;
+  background-color: var(--nav-color);
+  height: 3rem;
+}
+
+/* -------- FOOTER ----------- */
+
+footer {
+  background-color: var(--header-footer-color);
+  display: block;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+#footer-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+#footer-left,
+#footer-right {
+  justify-self: center;
+  text-align: center;
+}
+
+#footer-left {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 0;
+}
+
+#footer-left p {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+#footer-left #attribution {
+  font-size: 1.1rem;
+}
+
+#footer-left a {
+  color: #800000;
+}
+
+#footer-left a:visited {
+  color: #800000;
+}
+
+#social_media {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+footer img {
+  padding: 10px;
+}

@@ -1,6 +1,7 @@
 # Warcraft AI Reporter
 
 ![Warcraft AI Reporter](https://i.imgur.com/hp9StIT.jpeg)
+![Warcraft AI Reporter](https://raw.githubusercontent.com/xai-org/grok-assets/main/grok-hero.png)
 
 ## Class Details
 

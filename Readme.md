@@ -48,7 +48,9 @@ Discover unique insights into the Players and Realms surrounding World of Warcra
 const apiKey = Your_Secret_Key;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-let prompt = "This will be YOUR custom prompt. This is no different than the text you will write when typing into the AI prompt box on the webpage. It can be quite lengthy. Gemini 2.0 Flash allows up to 1,048,576 Tokens in a single query."
+let prompt = "This will be YOUR custom prompt. This is no different than the text you
+ will write when typing into the AI prompt box on the webpage. It can be quite
+ lengthy. Gemini 2.0 Flash allows up to 1,048,576 Tokens in a single query."
 
 const response = await fetch(API_URL, {
     method: 'POST',

@@ -40,8 +40,12 @@
                             </p>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Level:</span>
-                            <span class="detail-value" id="player-level">N/A</span>
+                            <div class="left-col-det">
+                                <span class="detail-label">Level:</span>
+                            </div>
+                            <div class="right-col-det">
+                                <span class="detail-value" id="player-level">N/A</span>
+                            </div>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Race:</span>
@@ -50,6 +54,10 @@
                         <div class="detail-item">
                             <span class="detail-label">Class:</span>
                             <span class="detail-value" id="player-class">N/A</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Gender:</span>
+                            <span class="detail-value" id="player-gender">N/A</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Faction:</span>
@@ -76,28 +84,23 @@
                             <span class="detail-value" id="player-guild">N/A</span>
                         </div>
                         <!--Because some info will not be available on Classic Era - below will be hidden-->
-                        <div class="detail-item" id="item-level-section" style="display: none">
-                            <!-- Hide if N/A -->
+                        <div class="detail-item item-optional" id="item-level-section">
                             <span class="detail-label">Avg Item Level:</span>
                             <span class="detail-value" id="player-ilvl">N/A</span>
                         </div>
-                        <div class="detail-item" id="achievements-section" style="display: none">
-                            <!-- Hide if N/A -->
+                        <div class="detail-item item-optional" id="achievements-section">
                             <span class="detail-label">Achievement Points:</span>
                             <span class="detail-value" id="player-achievements">N/A</span>
                         </div>
-                        <div class="detail-item" id="mounts-section" style="display: none">
-                            <!-- Hide if N/A -->
+                        <div class="detail-item item-optional" id="mounts-section">
                             <span class="detail-label">Mounts Collected:</span>
                             <span class="detail-value" id="player-mounts">N/A</span>
                         </div>
-                        <div class="detail-item" id="pets-section" style="display: none">
-                            <!-- Hide if N/A -->
+                        <div class="detail-item item-optional" id="pets-section">
                             <span class="detail-label">Pets Collected:</span>
                             <span class="detail-value" id="player-pets">N/A</span>
                         </div>
                         <div class="detail-item">
-                            <!-- For potential future use or status -- MAYBE!!-->
                             <span class="detail-label">Game Version:</span>
                             <span class="detail-value" id="player-game-version">N/A</span>
                         </div>

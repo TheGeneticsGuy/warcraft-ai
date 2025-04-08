@@ -49,7 +49,8 @@ body {
 }
 
 #main-header {
-  border-bottom: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--accent-color) 70%, transparent);
 }
 
 #main-footer {

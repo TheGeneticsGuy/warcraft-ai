@@ -44,172 +44,251 @@ h1 {
 
 body {
     font-family: 'PT Serif', serif;
+    /* Default body font */
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    background-color: #f8f8f7;
+    /* Slightly off-white background */
     color: #333;
+    line-height: 1.6;
 }
 
 #main_body {
     max-width: 1000px;
     margin: 2rem auto;
-    padding: 1.5rem;
+    padding: 2rem;
+    /* Increased padding */
     background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    /* Softer shadow */
+    border-radius: 6px;
 }
 
+/* --- Header --- */
 #character-name-title {
     text-align: center;
-    margin-bottom: 1.5rem;
-    color: #5a4a3a;
+    margin-bottom: 2rem;
+    /* More space below title */
+    color: #4a3c2b;
+    /* Darker brown */
     font-family: 'Playfair Display', serif;
-    font-size: 1.8rem;
+    /* Title font */
+    font-size: 2.2rem;
+    /* Larger title */
+    font-weight: 600;
+    border-bottom: 1px solid #e0d8cd;
+    /* Subtle divider */
+    padding-bottom: 0.8rem;
 }
 
+/* --- Grid Layout --- */
 .details-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    /* Single column on mobile */
+    gap: 2rem;
+    /* Increased gap */
+    margin-bottom: 2.5rem;
+    /* More space before AI section */
 }
 
+/* Two columns layout for larger screens */
 @media (min-width: 768px) {
     .details-grid {
-        grid-template-columns: auto 1fr;
-        gap: 2rem;
+        grid-template-columns: 220px 1fr;
+        align-items: start;
+        /* Align columns to the top */
     }
 
     #detail-col-left {
-        max-width: 200px;
+        position: sticky;
+        top: 20px;
+        /* Adjust position as needed */
     }
 }
 
 #player-avatar-container {
     text-align: center;
-    margin-bottom: 1rem;
-    min-height: 150px;
     border: 1px solid #eee;
-    padding: 0.5rem;
-    background-color: #fafafa;
+    background-color: #fdfdfd;
     border-radius: 4px;
+    padding: 0.5rem;
+    margin-bottom: 1.5rem;
+    min-height: 214px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 #player-avatar {
-    max-width: 100%;
+    width: 52%;
+    max-width: 75%;
     height: auto;
     border-radius: 3px;
     display: block;
-    margin: 0 auto;
+    margin-bottom: 0.5rem;
 }
 
 #avatar-loading,
 #avatar-unavailable {
     color: #888;
     font-style: italic;
-    padding: 2rem 0;
+    font-size: 0.9rem;
 }
 
 .detail-item {
-    margin-bottom: 0.8rem;
-    padding-bottom: 0.8rem;
-    border-bottom: 1px dotted #eee;
-    line-height: 1.5;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .detail-item:last-child {
     border-bottom: none;
     margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .detail-label {
-    font-weight: bold;
-    color: #555;
+    font-weight: 600;
+    color: #5a4a3a;
     display: block;
-    margin-bottom: 0.2rem;
-    font-size: 0.9rem;
+    /* Ensures value is on next line */
+    margin-bottom: 0.3rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .detail-value {
     color: #333;
     font-size: 1rem;
+    word-wrap: break-word;
 }
 
-/* Faction coloring */
+/* --- Optional Items --- */
+.item-optional {
+    display: none;
+    /* Hide by default */
+}
+
+.item-optional.visible {
+    display: block;
+    /* Show when .visible is added */
+}
+
+/* Faction specific colors */
 .faction-alliance {
-    color: #1a5cff;
+    color: #004cff;
     font-weight: bold;
 }
 
 .faction-horde {
-    color: #ff1a1a;
+    color: #ff0000;
     font-weight: bold;
 }
 
-/* AI Summary Section */
+/* --- AI Summary Section --- */
 #ai-summary-container {
-    border-top: 2px solid #e0e0e0;
-    padding-top: 1.5rem;
+    border-top: 2px solid #e0d8cd;
+    /* Match title border */
+    padding-top: 2rem;
+    margin-top: 2rem;
+    /* Ensure space even if grid gap changes */
 }
 
 #ai-summary-container h3 {
     text-align: center;
-    margin-bottom: 1rem;
-    color: #6a5a4a;
+    margin-bottom: 1.5rem;
+    color: #4a3c2b;
+    /* Match main title color */
     font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 600;
 }
 
 #ai-summary-content {
-    background-color: #f9f9f9;
-    border: 1px solid #eee;
-    padding: 1rem;
+    background-color: #faf8f5;
+    /* Very light beige background */
+    border: 1px solid #eee9e1;
+    padding: 1.5rem;
+    /* More padding */
     margin-bottom: 1rem;
     border-radius: 4px;
-    line-height: 1.6;
+    line-height: 1.7;
+    /* Slightly more line height for readability */
     white-space: pre-wrap;
+    color: #444;
+    /* Slightly softer text color */
 }
 
 #ai-summary-text {
     margin: 0;
+    font-size: 0.95rem;
 }
 
 #ai-timestamp {
     display: block;
     text-align: right;
     font-size: 0.8rem;
-    color: #888;
-    margin-top: 0.5rem;
+    color: #998c7e;
+    /* Muted brown */
+    margin-top: 0.8rem;
+    font-style: italic;
 }
 
 #refresh-ai-summary {
     display: block;
-    margin: 0 auto;
-    padding: 0.6rem 1.5rem;
+    margin: 1rem auto 0 auto;
+    /* Center button with space above */
+    padding: 0.7rem 1.8rem;
+    /* Slightly larger button */
     background-color: #8e765c;
     color: white;
     border: none;
     border-radius: 4px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+    font-family: 'PT Serif', serif;
+    /* Match body font */
 }
 
 #refresh-ai-summary:hover {
     background-color: #7a6049;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 #refresh-ai-summary:disabled {
     background-color: #ccc;
     cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* --- Loading & Error Messages --- */
+#loading-message {
+    /* Keep existing styles or enhance */
+    font-size: 1.1rem;
+    color: #666;
 }
 
 .error-message {
-    color: #d9534f;
-    /* Red for errors */
-    background-color: #f2dede;
-    border: 1px solid #ebccd1;
+    /* Shared style for players-main and player-details */
+    color: #942a25;
+    /* Darker red */
+    background-color: #fdecea;
+    /* Lighter pink background */
+    border: 1px solid #f5c6c0;
     padding: 1rem;
     border-radius: 4px;
     margin-top: 1.5rem;
     text-align: center;
+    font-size: 0.95rem;
+}
+
+#detail-error-message {
+    /* Specific margin if needed */
+    margin-bottom: 1.5rem;
 }

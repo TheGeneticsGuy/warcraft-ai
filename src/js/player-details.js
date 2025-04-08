@@ -1,55 +1,62 @@
+// src/js/player-details.js
 import {
     loadHeaderFooter,
     getParam,
     mapUrlTypeToApiNamespace,
+    getPrimaryName, // Ensure getPrimaryName is imported
 } from './utils.mjs';
 import { getAccessToken } from './blizzAPI.js';
 
 // --- Constants ---
 const AI_CACHE_PREFIX = 'aiPlayerSummary-';
-const API_REQUEST_TIMEOUT = 10000; // 10 seconds timeout for API requests -- just so it's not forever
+const API_REQUEST_TIMEOUT = 10000;
 
-// --- DOM Elements ---
-const loadingMessageEl = document.querySelector('#loading-message');
-const contentEl = document.querySelector('.player-detail-content');
-const errorEl = document.querySelector('#detail-error-message');
+// --- Declare DOM Element Variables (assigned IN initializePage) ---
+let loadingMessageEl,
+    contentEl,
+    errorEl,
+    nameTitleEl,
+    avatarContainerEl,
+    avatarImgEl,
+    avatarLoadingEl,
+    avatarUnavailableEl,
+    levelEl,
+    raceEl,
+    classEl,
+    genderEl,
+    factionEl,
+    realmEl,
+    regionEl,
+    titleEl,
+    guildEl,
+    ilvlSection,
+    ilvlEl,
+    achievementsSection,
+    achievementsEl,
+    mountsSection,
+    mountsEl,
+    petsSection,
+    petsEl,
+    gameVersionEl,
+    aiSummaryContainer,
+    aiSummaryText,
+    aiTimestamp,
+    refreshAiButton;
 
-// Detail Fields
-const nameTitleEl = document.querySelector('#character-name-title');
-const avatarContainerEl = document.querySelector('#player-avatar-container');
-const avatarImgEl = document.querySelector('#player-avatar');
-const avatarLoadingEl = document.querySelector('#avatar-loading');
-const avatarUnavailableEl = document.querySelector('#avatar-unavailable');
-const levelEl = document.querySelector('#player-level');
-const raceEl = document.querySelector('#player-race');
-const classEl = document.querySelector('#player-class');
-const factionEl = document.querySelector('#player-faction');
-const realmEl = document.querySelector('#player-realm');
-const regionEl = document.querySelector('#player-region');
-const titleEl = document.querySelector('#player-title');
-const guildEl = document.querySelector('#player-guild');
-const ilvlSection = document.querySelector('#item-level-section');
-const ilvlEl = document.querySelector('#player-ilvl');
-const achievementsSection = document.querySelector('#achievements-section');
-const achievementsEl = document.querySelector('#player-achievements');
-const mountsSection = document.querySelector('#mounts-section');
-const mountsEl = document.querySelector('#player-mounts');
-const petsSection = document.querySelector('#pets-section');
-const petsEl = document.querySelector('#player-pets');
-const gameVersionEl = document.querySelector('#player-game-version');
-
-// AI Summary Elements
-const aiSummaryContainer = document.querySelector('#ai-summary-container');
-const aiSummaryText = document.querySelector('#ai-summary-text');
-const aiTimestamp = document.querySelector('#ai-timestamp');
-const refreshAiButton = document.querySelector('#refresh-ai-summary');
-
-// --- Helper functions to keep the code clearner---
-
+// --- Helper Functions ---
 function showError(message) {
+    console.log('showError called. errorEl is:', errorEl);
     if (errorEl) {
         errorEl.textContent = message;
         errorEl.style.display = 'block';
+    } else {
+        console.error(
+            'FATAL: Could not find #detail-error-message element in the DOM when trying to show error. Message:',
+            message,
+        );
+        alert(
+            `Page Error: Could not display error message correctly.\nDetails: ${message}`,
+        );
     }
     if (loadingMessageEl) loadingMessageEl.style.display = 'none';
     if (contentEl) contentEl.style.display = 'none';
@@ -70,7 +77,6 @@ function showContent() {
     if (contentEl) contentEl.style.display = 'block';
 }
 
-// Simple fetch wrapper with timeout
 async function fetchWithTimeout(
     resource,
     options = {},
@@ -78,16 +84,13 @@ async function fetchWithTimeout(
 ) {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
-
     try {
         const response = await fetch(resource, {
             ...options,
             signal: controller.signal,
         });
         clearTimeout(id);
-
         if (!response.ok) {
-            // Try to parse Blizzard's error format
             let errorData;
             try {
                 errorData = await response.json();
@@ -103,26 +106,21 @@ async function fetchWithTimeout(
             if (errorData.detail) errorMessage += ` - ${errorData.detail}`;
             if (response.status === 404)
                 errorMessage = `Character or realm not found (${response.status}). Please check spelling and region.`;
-
             throw new Error(errorMessage);
         }
-        // Potential empty body for 204 No Content etc.
-        if (response.status === 204) {
-            return null;
-        }
+        if (response.status === 204) return null;
         return await response.json();
     } catch (error) {
         clearTimeout(id);
         if (error.name === 'AbortError') {
             throw new Error(`API request timed out after ${timeout / 1000} seconds.`);
         }
-        // Re-throw other errors (like the one above)
         throw error;
     }
 }
 
 // --- API Data Fetching ---
-
+// Simplified: removed unnecessary fetches for equipment & stats summaries
 async function fetchPlayerData(
     region,
     urlType,
@@ -135,114 +133,111 @@ async function fetchPlayerData(
         throw new Error(`Unsupported game version type: ${urlType}`);
     }
     const fullApiNamespace = `${apiNamespacePrefix}-${region}`;
-    const locale = 'en_US'; // Using a consistent locale for data processing
+    const locale = 'en_US';
 
     const baseUrl = `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${characterName.toLowerCase()}`;
     const headers = { Authorization: `Bearer ${token}` };
     const params = `?namespace=${fullApiNamespace}&locale=${locale}`;
 
-    console.log(
-        `Fetching data for: ${characterName}@${realmSlug} [${region}, ${urlType}]`,
-    );
-    console.log(`Using namespace: ${fullApiNamespace}`);
-
     try {
-        const basicProfilePromise = fetchWithTimeout(`${baseUrl}${params}`, {
-            headers,
-        });
-        const equipmentPromise = fetchWithTimeout(`${baseUrl}/equipment${params}`, {
-            headers,
-        }).catch((e) => {
-            console.warn('Equipment fetch failed:', e);
-            return null;
-        }); // Optional
-        const mediaPromise = fetchWithTimeout(
-            `${baseUrl}/character-media${params}`,
-            { headers },
-        ).catch((e) => {
-            console.warn('Media fetch failed:', e);
-            return null;
-        }); // Optional
-
-        // Conditional fetching based on game type (Classic Era has limited endpoints)
-        let statsPromise = null;
-        let collectionsMountsPromise = null;
-        let collectionsPetsPromise = null;
-
-        if (urlType !== 'classicera') {
-            // Assume Retail and Cata have these
-            statsPromise = fetchWithTimeout(
-                `${baseUrl}/achievements/statistics${params}`,
-                { headers },
-            ).catch((e) => {
-                console.warn('Stats fetch failed:', e);
-                return null;
-            });
-            collectionsMountsPromise = fetchWithTimeout(
-                `${baseUrl}/collections/mounts${params}`,
-                { headers },
-            ).catch((e) => {
-                console.warn('Mounts fetch failed:', e);
-                return null;
-            });
-            collectionsPetsPromise = fetchWithTimeout(
-                `${baseUrl}/collections/pets${params}`,
-                { headers },
-            ).catch((e) => {
-                console.warn('Pets fetch failed:', e);
-                return null;
-            });
-        } else {
-            console.log('Skipping advanced stats/collections fetch for Classic Era.');
-        }
-
-        // Await all promises concurrently
+        // Fetch required and optional data concurrently
         const [
-            basicProfile,
-            equipment,
-            media,
-            stats,
+            basicProfile, // Main profile - contains iLvl, achievement points
+            media, // For avatar
+            // Conditional fetches for collections (keep these)
             mountsCollection,
             petsCollection,
         ] = await Promise.all([
-            basicProfilePromise,
-            equipmentPromise,
-            mediaPromise,
-            statsPromise,
-            collectionsMountsPromise,
-            collectionsPetsPromise,
+            fetchWithTimeout(`${baseUrl}${params}`, { headers }), // REQUIRED
+
+            fetchWithTimeout(`${baseUrl}/character-media${params}`, { headers }) // For avatar
+                .catch((e) => {
+                    console.warn('Media fetch failed (non-critical):', e);
+                    return null;
+                }),
+
+            urlType !== 'classicera' // Fetch collections only if not Classic Era
+                ? fetchWithTimeout(`${baseUrl}/collections/mounts${params}`, {
+                    headers,
+                }).catch((e) => {
+                    console.warn('Mounts fetch failed (non-critical):', e);
+                    return null;
+                })
+                : Promise.resolve(null),
+
+            urlType !== 'classicera'
+                ? fetchWithTimeout(`${baseUrl}/collections/pets${params}`, {
+                    headers,
+                }).catch((e) => {
+                    console.warn('Pets fetch failed (non-critical):', e);
+                    return null;
+                })
+                : Promise.resolve(null),
         ]);
 
+        // Log results to see what we got
+        console.log('API Fetch Results:', {
+            basicProfile,
+            media,
+            mountsCollection,
+            petsCollection,
+        });
+
+        if (!basicProfile) {
+            // If the basic profile itself failed, we can't proceed meaningfully.
+            throw new Error('Failed to fetch basic character profile.');
+        }
+
         // --- Process Data ---
+        // Extract iLvl and Achievement points DIRECTLY from basicProfile
+        const averageItemLevel = basicProfile.average_item_level ?? null; // From main profile
+        const achievementPoints = basicProfile.achievement_points ?? null; // From main profile
+
+        // Calculate unique pet count
+        let uniquePetCount = null;
+        if (petsCollection?.pets && Array.isArray(petsCollection.pets)) {
+            const uniqueSpeciesIds = new Set();
+            petsCollection.pets.forEach((pet) => {
+                if (pet?.species?.id) uniqueSpeciesIds.add(pet.species.id);
+            });
+            uniquePetCount = uniqueSpeciesIds.size;
+        } else if (petsCollection === null && urlType !== 'classicera') {
+            uniquePetCount = null;
+        } else {
+            uniquePetCount = 0;
+        }
+
+        // Mount count
+        const mountCount =
+            mountsCollection?.mounts?.length ??
+            (mountsCollection === null && urlType !== 'classicera' ? null : 0);
+
         const playerData = {
             name: basicProfile.name,
             id: basicProfile.id,
             level: basicProfile.level,
-            race: basicProfile.race.name,
-            class: basicProfile.character_class.name,
-            faction: basicProfile.faction.name,
-            gender: basicProfile.gender.name,
-            realm: basicProfile.realm.name,
-            realmSlug: basicProfile.realm.slug, // Store slug for caching key
-            region: region.toUpperCase(), // Display region
+            race: getPrimaryName(basicProfile.race.name),
+            class: getPrimaryName(basicProfile.character_class.name),
+            faction: getPrimaryName(basicProfile.faction.name),
+            gender: getPrimaryName(basicProfile.gender.name),
+            realm: getPrimaryName(basicProfile.realm.name),
+            realmSlug: basicProfile.realm.slug,
+            region: region.toUpperCase(),
             title:
                 basicProfile.active_title?.display_string.replace(
                     '{name}',
                     basicProfile.name,
-                ) || 'N/A',
-            guild: basicProfile.guild?.name || 'No Guild',
-            // Optional data points
-            averageItemLevel: equipment?.equipped_item_level || null,
-            achievementPoints: stats?.total_points || null,
-            mountsCollected: mountsCollection?.mounts?.length || null,
-            petsCollected: petsCollection?.pets?.length || null,
-            // Find avatar URL (prefer 'avatar' over 'inset' or 'main')
+                ) || null,
+            guild: basicProfile.guild?.name || null,
+            averageItemLevel: averageItemLevel, // Use direct value
+            achievementPoints: achievementPoints, // Use direct value
+            mountsCollected: mountCount,
+            petsCollected: uniquePetCount,
             avatarUrl:
                 media?.assets?.find((a) => a.key === 'avatar')?.value ||
                 media?.assets?.find((a) => a.key === 'inset')?.value ||
                 media?.assets?.find((a) => a.key === 'main')?.value ||
                 null,
-            // Include for context and AI prompt
             urlType: urlType,
             gameVersionDisplay:
                 urlType === 'retail'
@@ -252,16 +247,15 @@ async function fetchPlayerData(
                         : 'Classic Era',
         };
 
+        console.log('Processed Player Data:', playerData);
         return playerData;
     } catch (error) {
-        console.error('Error fetching player data:', error);
-        // Re-throw the specific error message we got from fetchWithTimeout or API
+        console.error('Error during player data fetching/processing:', error);
         throw error;
     }
 }
 
 // --- UI Rendering ---
-
 function renderPlayerData(
     playerData,
     regionParam,
@@ -270,39 +264,58 @@ function renderPlayerData(
     characterNameParam,
 ) {
     if (!playerData) {
-        // Fallback if not caught earlier
         showError(
             `Could not load details for ${characterNameParam} on ${realmSlugParam}.`,
         );
         return;
     }
 
-    // Set page title
-    document.title = `${playerData.name} | Player Details`;
-
-    // Set main header
-    nameTitleEl.textContent = `${playerData.name} - ${playerData.level} ${playerData.race} ${playerData.class}`;
-
-    // Basic Info
-    levelEl.textContent = playerData.level || 'N/A';
-    raceEl.textContent = playerData.race || 'N/A';
-    classEl.textContent = playerData.class || 'N/A';
-    realmEl.textContent = playerData.realm || realmSlugParam; // Fallback to param if needed
-    regionEl.textContent = regionParam.toUpperCase();
-    titleEl.textContent = playerData.title || 'N/A';
-    guildEl.textContent = playerData.guild || 'N/A';
-    gameVersionEl.textContent = playerData.gameVersionDisplay || urlTypeParam; // Fallback
-
-    // Faction with potential styling
-    factionEl.textContent = playerData.faction || 'N/A';
-    factionEl.classList.remove('faction-alliance', 'faction-horde'); // Clear previous
-    if (playerData.faction?.toLowerCase() === 'alliance') {
-        factionEl.classList.add('faction-alliance');
-    } else if (playerData.faction?.toLowerCase() === 'horde') {
-        factionEl.classList.add('faction-horde');
+    // Safety check elements needed for basic display
+    if (
+        !nameTitleEl ||
+        !levelEl ||
+        !raceEl ||
+        !classEl ||
+        !genderEl ||
+        !realmEl ||
+        !regionEl ||
+        !titleEl ||
+        !guildEl ||
+        !gameVersionEl ||
+        !factionEl ||
+        !avatarImgEl ||
+        !avatarLoadingEl ||
+        !avatarUnavailableEl
+    ) {
+        console.error(
+            'One or more core player detail DOM elements not found during render!',
+        );
+        showError(
+            'Internal page error: Could not find elements to display player data.',
+        );
+        return;
     }
 
-    // Avatar
+    document.title = `${playerData.name} | Player Details`;
+    nameTitleEl.textContent = `${playerData.name} - ${playerData.level} ${playerData.race} ${playerData.class}`;
+
+    levelEl.textContent = playerData.level ?? 'N/A';
+    raceEl.textContent = playerData.race ?? 'N/A';
+    classEl.textContent = playerData.class ?? 'N/A';
+    genderEl.textContent = playerData.gender ?? 'N/A';
+    realmEl.textContent = playerData.realm ?? realmSlugParam;
+    regionEl.textContent = regionParam.toUpperCase();
+    titleEl.textContent = playerData.title ?? 'N/A';
+    guildEl.textContent = playerData.guild ?? 'No Guild';
+    gameVersionEl.textContent = playerData.gameVersionDisplay ?? urlTypeParam;
+
+    factionEl.textContent = playerData.faction ?? 'N/A';
+    factionEl.classList.remove('faction-alliance', 'faction-horde');
+    if (playerData.faction?.toLowerCase() === 'alliance')
+        factionEl.classList.add('faction-alliance');
+    else if (playerData.faction?.toLowerCase() === 'horde')
+        factionEl.classList.add('faction-horde');
+
     if (playerData.avatarUrl) {
         avatarImgEl.src = playerData.avatarUrl;
         avatarImgEl.alt = `${playerData.name} Avatar`;
@@ -310,7 +323,6 @@ function renderPlayerData(
         avatarLoadingEl.style.display = 'none';
         avatarUnavailableEl.style.display = 'none';
         avatarImgEl.onerror = () => {
-            // Handle image loading errors
             console.warn('Failed to load avatar image:', playerData.avatarUrl);
             avatarImgEl.style.display = 'none';
             avatarUnavailableEl.textContent = 'Avatar image failed to load.';
@@ -319,17 +331,64 @@ function renderPlayerData(
     } else {
         avatarImgEl.style.display = 'none';
         avatarLoadingEl.style.display = 'none';
-        avatarUnavailableEl.style.display = 'block'; // Show unavailable message
+        avatarUnavailableEl.style.display = 'block';
     }
 
-    //  show if data exists
+    // CORRECTED renderOptional function using CSS classes
     function renderOptional(sectionEl, valueEl, value) {
-        if (value !== null && value !== undefined) {
-            valueEl.textContent = value.toLocaleString(); // Format the numbers nicely
-            sectionEl.style.display = 'flex'; //
-        } else {
-            sectionEl.style.display = 'none';
+        const sectionId = sectionEl ? sectionEl.id : 'null_section';
+        // Always remove first in case of re-render
+        if (sectionEl) sectionEl.classList.remove('visible');
+        else {
+            console.warn(
+                `renderOptional: Section element missing for potential value:`,
+                value,
+            );
+            return;
         }
+
+        // Log inputs for debugging specific sections
+        if (
+            [
+                'mounts-section',
+                'pets-section',
+                'item-level-section',
+                'achievements-section',
+            ].includes(sectionId)
+        )
+
+            // Check BOTH elements exist AND value is valid (including 0)
+            if (value !== null && value !== undefined && sectionEl && valueEl) {
+                valueEl.textContent = value.toLocaleString();
+                sectionEl.classList.add('visible'); // USE CLASS TO SHOW
+                if (
+                    [
+                        'mounts-section',
+                        'pets-section',
+                        'item-level-section',
+                        'achievements-section',
+                    ].includes(sectionId)
+                ) {
+                }
+            } else {
+                if (
+                    [
+                        'mounts-section',
+                        'pets-section',
+                        'item-level-section',
+                        'achievements-section',
+                    ].includes(sectionId)
+                ) {
+                    let reason = [];
+                    if (value === null || value === undefined)
+                        reason.push('value is null/undefined');
+                    if (!sectionEl) reason.push('sectionEl is null');
+                    if (!valueEl) reason.push('valueEl is null');
+                    console.warn(
+                        `renderOptional: Did NOT add 'visible' to ${sectionId}. Reason(s): ${reason.join(', ')}`,
+                    );
+                }
+            }
     }
 
     renderOptional(ilvlSection, ilvlEl, playerData.averageItemLevel);
@@ -341,77 +400,61 @@ function renderPlayerData(
     renderOptional(mountsSection, mountsEl, playerData.mountsCollected);
     renderOptional(petsSection, petsEl, playerData.petsCollected);
 
-    // Show the main content area now that it's populated
     showContent();
-
-    // Enable AI section (it handles its own loading message)
     if (aiSummaryContainer) aiSummaryContainer.style.display = 'block';
 }
 
-// --- AI Summary Functions (Adapted from realm-detail.js) ---
-
+// --- AI Summary Functions ---
 async function fetchAiSummaryDirectly(playerData) {
+    // ... (Keep AI fetch function exactly as it was in the previous correct version) ...
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
         console.error('Gemini API key (VITE_GEMINI_API_KEY) is not set.');
         return 'AI summary configuration error (missing key).';
     }
     if (!playerData) return 'Cannot generate summary without player data.';
-
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`; // Use 2.0 Flash
-
-    // Construct a detailed prompt using available data
-    let prompt = `Adopt the persona of a seasoned Azerothian chronicler recounting tales of heroes of Azeroth, of stories of great adventurers. Write a moderate summary, no more than 4 or 5 paragraphs. Make it an engaging and flavorful summary of the adventurer known as "${playerData.name}".This ${playerData.race} ${playerData.class} of level ${playerData.level} hails from the ${playerData.realm} realm in the ${playerData.region} region and fights for the ${playerData.faction}. Please refrain from using gendered language. In your summary, act as if you do not know if the player is male or female.`;
-
-    if (playerData.title && playerData.title !== 'N/A') {
-        prompt += `They currently bear the title "${playerData.title}". `;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    let prompt = `Adopt the persona of a seasoned Azerothian chronicler recounting tales of heroes of Azeroth, of stories of great adventurers. Write a moderate summary, aiming for 4 to 5 paragraphs. Make it an engaging and flavorful summary of the adventurer known as "${playerData.name}".\n\nThis ${playerData.race} ${playerData.class} of level ${playerData.level} hails from the ${playerData.realm} realm in the ${playerData.region} region and fights for the ${playerData.faction}. Please refrain from using gendered language. In your summary, act as if you do not know if the player is male or female.`;
+    if (playerData.title) {
+        prompt += ` They currently bear the title "${playerData.title}".`;
     }
-    if (playerData.guild && playerData.guild !== 'No Guild') {
-        // Could add more detail if guild rank was available
-        prompt += `They are a member of the guild "${playerData.guild}". `;
+    if (playerData.guild) {
+        prompt += ` They are a member of the guild "${playerData.guild}".`;
     } else {
-        prompt += `They currently wander Azeroth unaffiliated with a guild. `;
+        prompt += ` They currently wander Azeroth unaffiliated with a guild.`;
     }
-
-    // Add optional details if available
     if (playerData.averageItemLevel) {
-        prompt += `Their prowess in combat is reflected in their average equipment power of ${playerData.averageItemLevel}. `;
+        prompt += ` Their prowess in combat is reflected in their average equipment power of ${playerData.averageItemLevel}.`;
     }
     if (playerData.achievementPoints) {
-        prompt += `Their long list of deeds across the world has earned them ${playerData.achievementPoints.toLocaleString()} achievement points. `;
+        prompt += ` Their long list of deeds across the world has earned them ${playerData.achievementPoints.toLocaleString()} achievement points.`;
     }
-    if (
-        playerData.mountsCollected !== null ||
-        playerData.petsCollected !== null
-    ) {
-        prompt += `Their stables and menagerie are noteworthy, containing `;
-        if (playerData.mountsCollected !== null) {
-            prompt += `${playerData.mountsCollected.toLocaleString()} mounts${playerData.petsCollected !== null ? ' and ' : ''}`;
+    const mentionMounts =
+        playerData.mountsCollected !== null && playerData.mountsCollected >= 500;
+    const mentionPets =
+        playerData.petsCollected !== null && playerData.petsCollected >= 500;
+    if (mentionMounts || mentionPets) {
+        prompt += ` Their stables and menagerie are noteworthy, containing`;
+        if (mentionMounts) {
+            prompt += ` ${playerData.mountsCollected.toLocaleString()} mounts`;
+            if (mentionPets) prompt += ` and`;
         }
-        if (playerData.petsCollected !== null) {
-            prompt += `${playerData.petsCollected.toLocaleString()} companion pets`;
+        if (mentionPets) {
+            prompt += ` ${playerData.petsCollected.toLocaleString()} unique companion pets`;
         }
-        prompt += `. `;
+        prompt += `.`;
     }
-
-    // Conclude the prompt
-    prompt += `Weave these details into a narrative fitting the Warcraft universe. Be creative and evocative, but ground the summary in the provided facts. If some details (like collections or item level) are missing, omit them gracefully rather than stating "N/A". If their mount or pet collection is small, don't talk about it. A reasonable mount or pet collection is anything above 500 of each. Do not invent information not provided. End with a sentence that sparks curiosity about their future adventures. Try to avoid being too cheesy with things like "gather around weary travelers" and instead tell it as if you are sharing a tale of a legend and hero of Azeroth.`;
-
-    console.log('AI Prompt:', prompt); // To copy and paste
-
+    prompt += ` Weave these details into a narrative fitting the Warcraft universe. Mention their game version context (${playerData.gameVersionDisplay}). Be creative and evocative, but ground the summary in the provided facts. If some details (like collections or item level) are missing, omit them gracefully rather than stating "N/A". Do not invent information not provided. Ensure the response contains 4 to 5 distinct paragraphs. End with a sentence that sparks curiosity about their future adventures. Try to avoid being too cheesy with things like "gather around weary travelers" and instead tell it as if you are sharing a tale of a legend and hero of Azeroth.`;
+    console.log('AI Prompt:', prompt);
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.7, // Adjust creativity
-                    maxOutputTokens: 1024,      // MAX NUMBER OF WORDS!!! Keep it to 1000 ish
-                },
+                generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
             }),
         });
-
         if (!response.ok) {
             const errorBody = await response
                 .json()
@@ -422,10 +465,7 @@ async function fetchAiSummaryDirectly(playerData) {
                 `Gemini API request failed: ${response.status}`,
             );
         }
-
         const data = await response.json();
-
-        // Handle potential safety blocks or empty responses - -This is Google's Recommended handling errors
         if (data.promptFeedback?.blockReason) {
             console.warn(
                 'AI content blocked:',
@@ -434,31 +474,36 @@ async function fetchAiSummaryDirectly(playerData) {
             );
             return `Summary generation was blocked due to: ${data.promptFeedback.blockReason}. Please adjust the content or try again.`;
         }
-        if (data.candidates?.[0]?.finishReason === 'SAFETY') {
+        const finishReason = data.candidates?.[0]?.finishReason;
+        if (finishReason === 'MAX_TOKENS') {
+            console.warn(`AI response truncated because MAX_TOKENS was reached.`);
+        }
+        if (finishReason === 'SAFETY') {
             console.warn(
                 'AI content blocked due to safety during generation:',
                 data.candidates[0].safetyRatings,
             );
             return `Summary generation was blocked for safety reasons.`;
         }
-
-        // Extract text safely
         const summaryText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
         if (summaryText) {
-            return summaryText.trim();
+            let finalText = summaryText.trim();
+            if (finishReason === 'MAX_TOKENS') {
+                finalText += '\n\n[...Chronicle truncated due to length limit.]';
+            }
+            return finalText;
         } else {
             console.warn('Unexpected AI response structure or empty content:', data);
             return 'Could not parse AI summary from the response.';
         }
     } catch (error) {
         console.error('Error fetching AI summary directly:', error);
-        // Provide a user-friendly error message
         return `Error generating summary: ${error.message.includes('API key not valid') ? 'Invalid API Key' : error.message}`;
     }
 }
 
 async function displayAiSummary(playerData, forceRefresh = false) {
+    // ... (Keep this function exactly as it was in the previous correct version) ...
     if (
         !aiSummaryContainer ||
         !playerData?.name ||
@@ -468,18 +513,18 @@ async function displayAiSummary(playerData, forceRefresh = false) {
         console.log(
             'Skipping AI summary: Missing required elements or player data.',
         );
-        if (aiSummaryContainer) aiSummaryContainer.style.display = 'none'; // Ensure it's hidden
+        if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';
         return;
     }
-
-    // Ensure container is visible before showing loading state
+    if (!aiSummaryText || !aiTimestamp || !refreshAiButton) {
+        console.error('AI Summary DOM elements missing!');
+        return;
+    }
     aiSummaryContainer.style.display = 'block';
-
     const cacheKey = `${AI_CACHE_PREFIX}${playerData.region}-${playerData.realmSlug}-${playerData.name.toLowerCase()}`;
     const cachedData = localStorage.getItem(cacheKey);
-    let summary = '';
-    let timestamp = null;
-
+    let summary = '',
+        timestamp = null;
     if (cachedData && !forceRefresh) {
         try {
             const parsed = JSON.parse(cachedData);
@@ -487,19 +532,15 @@ async function displayAiSummary(playerData, forceRefresh = false) {
             timestamp = parsed.timestamp;
         } catch (e) {
             console.error('Failed to parse cached AI summary', e);
-            localStorage.removeItem(cacheKey); // Clear invalid cache item
+            localStorage.removeItem(cacheKey);
         }
     }
-
     if (!summary || forceRefresh) {
         aiSummaryText.textContent = 'Generating chronicle...';
         aiTimestamp.textContent = '';
         refreshAiButton.disabled = true;
-
-        summary = await fetchAiSummaryDirectly(playerData); // Pass the whole object
-
+        summary = await fetchAiSummaryDirectly(playerData);
         timestamp = new Date().toISOString();
-        // Avoid caching error messages
         if (
             !summary.startsWith('Error') &&
             !summary.startsWith('AI summary configuration error') &&
@@ -507,33 +548,77 @@ async function displayAiSummary(playerData, forceRefresh = false) {
         ) {
             localStorage.setItem(cacheKey, JSON.stringify({ summary, timestamp }));
         } else {
-            // If it's an error, don't update the timestamp display below
             timestamp = null;
         }
-
         refreshAiButton.disabled = false;
     }
-
     aiSummaryText.textContent =
         summary || 'No chronicle available for this adventurer.';
     if (timestamp) {
         aiTimestamp.textContent = `Chronicle generated: ${new Date(timestamp).toLocaleString()}`;
     } else {
-        aiTimestamp.textContent = ''; // Clear timestamp if showing error or no cache
+        aiTimestamp.textContent = '';
     }
 }
 
 // --- Initialization ---
-
 async function initializePage() {
     await loadHeaderFooter();
 
+    // *** ASSIGN DOM ELEMENTS HERE ***
+    loadingMessageEl = document.querySelector('#loading-message');
+    contentEl = document.querySelector('.player-detail-content');
+    errorEl = document.querySelector('#detail-error-message');
+    nameTitleEl = document.querySelector('#character-name-title');
+    avatarContainerEl = document.querySelector('#player-avatar-container');
+    avatarImgEl = document.querySelector('#player-avatar');
+    avatarLoadingEl = document.querySelector('#avatar-loading');
+    avatarUnavailableEl = document.querySelector('#avatar-unavailable');
+    levelEl = document.querySelector('#player-level');
+    raceEl = document.querySelector('#player-race');
+    classEl = document.querySelector('#player-class');
+    genderEl = document.querySelector('#player-gender');
+    factionEl = document.querySelector('#player-faction');
+    realmEl = document.querySelector('#player-realm');
+    regionEl = document.querySelector('#player-region');
+    titleEl = document.querySelector('#player-title');
+    guildEl = document.querySelector('#player-guild');
+    ilvlSection = document.querySelector('#item-level-section');
+    ilvlEl = document.querySelector('#player-ilvl');
+    achievementsSection = document.querySelector('#achievements-section');
+    achievementsEl = document.querySelector('#player-achievements');
+    mountsSection = document.querySelector('#mounts-section');
+    mountsEl = document.querySelector('#player-mounts');
+    petsSection = document.querySelector('#pets-section');
+    petsEl = document.querySelector('#player-pets');
+    gameVersionEl = document.querySelector('#player-game-version');
+    aiSummaryContainer = document.querySelector('#ai-summary-container');
+    aiSummaryText = document.querySelector('#ai-summary-text');
+    aiTimestamp = document.querySelector('#ai-timestamp');
+    refreshAiButton = document.querySelector('#refresh-ai-summary');
+
+    // Check critical elements IMMEDIATELY after selecting them
+    if (!errorEl || !loadingMessageEl || !contentEl) {
+        console.error(
+            'CRITICAL: Could not find essential layout elements (#loading-message, .player-detail-content, #detail-error-message). Aborting.',
+        );
+        alert(
+            'A critical error occurred loading the page components. Please try refreshing.',
+        );
+        return; // Stop if essential layout is broken
+    }
+
+    if (!ilvlSection || !ilvlEl || !achievementsSection || !achievementsEl || !mountsSection || !mountsEl || !petsSection || !petsEl) {
+        console.warn("One or more optional detail DOM elements were not found. Check IDs in HTML and JS.");
+        // Don't necessarily stop execution, but be aware.
+    }
+
+    // --- Get URL Params ---
     const region = getParam('region');
     const urlType = getParam('urlType');
     const realmSlug = getParam('realmSlug');
-    const characterName = getParam('characterName'); // Raw name from URL
+    const characterName = getParam('characterName');
 
-    // --- Validate Parameters ---
     if (!region || !urlType || !realmSlug || !characterName) {
         showError(
             'Error: Missing required player details in URL. Please perform a search again.',
@@ -541,23 +626,23 @@ async function initializePage() {
         return;
     }
 
-    // Show loading state immediately
-    if (loadingMessageEl) loadingMessageEl.style.display = 'block';
-    if (contentEl) contentEl.style.display = 'none';
+    // Initial UI State
+    loadingMessageEl.style.display = 'block';
+    contentEl.style.display = 'none';
     if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';
-    hideError();
+    hideError(); // Safe now
 
+    // --- Fetch Token ---
     let token;
     try {
         token = await getAccessToken();
-        if (!token) {
-            throw new Error('Could not authenticate with Blizzard API.');
-        }
+        if (!token) throw new Error('Could not authenticate with Blizzard API.');
     } catch (authError) {
         showError(`Authentication Error: ${authError.message}`);
         return;
     }
 
+    // --- Fetch and Render Player Data ---
     let playerData;
     try {
         playerData = await fetchPlayerData(
@@ -567,33 +652,24 @@ async function initializePage() {
             characterName,
             token,
         );
+        // The fetchPlayerData function now throws if basicProfile fails, so we don't need a separate check here.
+        renderPlayerData(playerData, region, urlType, realmSlug, characterName);
+        await displayAiSummary(playerData);
 
-        if (!playerData) {
-            // This case might happen if fetchPlayerData returns null unexpectedly
-            throw new Error('Received no data from the API.');
-        }
-
-        renderPlayerData(playerData, region, urlType, realmSlug, characterName); // Pass params for context/fallbacks
-
-        // --- AI Summary Logic ---
-        // Use the processed data from playerData for consistency
-        await displayAiSummary(playerData); // Initial load (cached or new)
-
-        // Add listener for the refresh button *after* initial load attempt
         if (refreshAiButton) {
             refreshAiButton.addEventListener('click', () => {
-                // Ensure we have the latest playerData (though it shouldn't change without page reload)
                 if (playerData) {
-                    displayAiSummary(playerData, true); // Force refresh
+                    displayAiSummary(playerData, true);
                 } else {
                     console.warn('Cannot refresh AI summary, player data is missing.');
                 }
             });
+        } else {
+            console.warn('Refresh AI button not found.');
         }
     } catch (fetchError) {
-        // fetchPlayerData throws specific errors now, display them
+        // This will catch errors from fetchPlayerData or renderPlayerData
         showError(`Error loading player data: ${fetchError.message}`);
-        // Ensure AI section is hidden on fetch error
         if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';
     }
 }

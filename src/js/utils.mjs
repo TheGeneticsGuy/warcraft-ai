@@ -95,7 +95,7 @@ export function mapUrlTypeToApiNamespace(urlType, apiType = 'dynamic') {
       retail: 'static',
       classic: 'static-classic',
       classicera: 'static-classic1x',
-    }
+    },
   };
 
   const prefix = map[apiType]?.[urlType];

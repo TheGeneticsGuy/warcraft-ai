@@ -1,103 +1,83 @@
 <!-- src/players/index.html -->
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Warcraft Player Search</title>
 
-    <!-- STYLE SHEETS -->
-    <link rel="stylesheet" href="../css/players.css" />
-    <link rel="stylesheet" href="../css/players-large.css" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warcraft Player Search</title>
 
-    <script type="module" src="../js/players-main.js"></script>
+  <!-- STYLE SHEETS -->
+  <link rel="stylesheet" href="../css/players.css" />
+  <link rel="stylesheet" href="../css/players-large.css" />
+  <link rel="stylesheet" href="../css/header-footer.css" />
 
-    <link rel="icon" href="/images/favicon.ico" />
-  </head>
+  <script type="module" src="../js/players-main.js"></script>
 
-  <body>
-    <header class="divider" id="main-header"></header>
+  <link rel="icon" href="/images/favicon.ico" />
+</head>
 
-    <main>
-      <div id="main_body">
-        <h2 id="players-header">PLAYER SEARCH</h2>
-        <div id="search-form-container">
-          <!-- Game Version Filters -->
-          <div id="filter-button-container">
-            <button
-              class="filter-button"
-              id="retail-button"
-              data-urltype="retail"
-            >
-              Retail
-            </button>
-            <button
-              class="filter-button"
-              id="classic-button"
-              data-urltype="classic"
-            >
-              Cataclysm
-            </button>
-            <button
-              class="filter-button"
-              id="classicEra-button"
-              data-urltype="classicera"
-            >
-              Classic Era
-            </button>
-          </div>
+<body>
+  <header class="divider" id="main-header"></header>
 
-          <!-- Region Selection -->
-          <div class="filter-dropdown-container">
-            <label for="region-select">Region:</label>
-            <select id="region-select" class="dropdown">
-              <option value="us">North America (us)</option>
-              <option value="eu">Europe (eu)</option>
-              <option value="kr">Korea (kr)</option>
-              <option value="tw">Taiwan (tw)</option>
-            </select>
-          </div>
-
-          <!-- Realm Selection Dropdown -->
-          <div class="filter-dropdown-container">
-            <label for="realm-select">Realm:</label>
-            <select id="realm-select" class="dropdown" required disabled>
-              <option value="">-- Select Region/Version First --</option>
-            </select>
-            <small id="realm-loading-message" style="display: none; color: #888"
-              >Loading realms...</small
-            >
-          </div>
-
-          <!-- Character Name Input -->
-          <div class="input-container">
-            <label for="character-name-input">Character Name:</label>
-            <input
-              type="text"
-              id="character-name-input"
-              placeholder="e.g., Arthas, Thrall"
-              required
-            />
-          </div>
-
-          <!-- Search Button -->
-          <div id="search-button-container">
-            <button id="search-player-button">Search Player</button>
-          </div>
-
-          <!-- Error Message Area -->
-          <div
-            id="error-message"
-            class="error-message"
-            style="display: none"
-          ></div>
+  <main>
+    <div id="main_body">
+      <h2 id="players-header">PLAYER SEARCH</h2>
+      <div id="search-form-container">
+        <!-- Game Version Filters -->
+        <div id="filter-button-container">
+          <button class="filter-button" id="retail-button" data-urltype="retail">
+            Retail
+          </button>
+          <button class="filter-button" id="classic-button" data-urltype="classic">
+            Cataclysm
+          </button>
+          <button class="filter-button" id="classicEra-button" data-urltype="classicera">
+            Classic Era
+          </button>
         </div>
+
+        <!-- Region Selection -->
+        <div class="filter-dropdown-container">
+          <label for="region-select">Region:</label>
+          <select id="region-select" class="dropdown">
+            <option value="us">North America (us)</option>
+            <option value="eu">Europe (eu)</option>
+            <option value="kr">Korea (kr)</option>
+            <option value="tw">Taiwan (tw)</option>
+          </select>
+        </div>
+
+        <!-- Realm Selection Dropdown -->
+        <div class="filter-dropdown-container">
+          <label for="realm-select">Realm:</label>
+          <select id="realm-select" class="dropdown" required disabled>
+            <option value="">-- Select Region/Version First --</option>
+          </select>
+          <small id="realm-loading-message" style="display: none; color: #888">Loading realms...</small>
+        </div>
+
+        <!-- Character Name Input -->
+        <div class="input-container">
+          <label for="character-name-input">Character Name:</label>
+          <input type="text" id="character-name-input" placeholder="e.g., Arthas, Thrall" required />
+        </div>
+
+        <!-- Search Button -->
+        <div id="search-button-container">
+          <button id="search-player-button">Search Player</button>
+        </div>
+
+        <!-- Error Message Area -->
+        <div id="error-message" class="error-message" style="display: none"></div>
       </div>
+    </div>
 
-      <!-- Divider at bottom above footer -->
-      <div class="divider-footer"></div>
-    </main>
+    <!-- Divider at bottom above footer -->
+    <div class="divider-footer"></div>
+  </main>
 
-    <footer id="main-footer"></footer>
-  </body>
+  <footer id="main-footer"></footer>
+</body>
+
 </html>

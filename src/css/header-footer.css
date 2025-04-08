@@ -1,0 +1,43 @@
+:root {
+    --header-footer-color: #ffdda9;
+    --accent-color: #000000d7;
+
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+}
+
+/* --- Header & Footer --- */
+#main-header,
+#main-footer {
+    background-color: var(--header-footer-color);
+    color: var(--accent-color);
+    padding: var(--spacing-md) var(--spacing-lg);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+#main-header {
+    border-bottom: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
+}
+
+#main-footer {
+    margin-top: var(--spacing-xl);
+    border-top: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
+    font-size: 0.9rem;
+}
+
+#main-header a,
+#main-footer a {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#main-header a:hover,
+#main-footer a:hover {
+    text-decoration: underline;
+}
+
+h1 {
+    font-size: 3.5rem;
+}

@@ -2,9 +2,12 @@
 
 ![Warcraft AI Reporter](https://i.imgur.com/hp9StIT.jpeg)
 
+## Class Details
 
 **Author:** Aaron Topping
+
 **Class:** WDD 330 - BYU-Idaho, Winter Session 2025
+
 **Professor:** Jordan Boyce
 
 ## Summary of the Project

@@ -5,427 +5,428 @@
 
 /* --- CSS Variables (Custom Properties) --- */
 :root {
-    --main-color: #ffdda9;
-    --button-bg: #444;
-    --paragraph-font: 'PT Serif', serif;
-    --header-font: 'Playfair Display', serif;
+  --main-color: #ffdda9;
+  --button-bg: #444;
+  --paragraph-font: 'PT Serif', serif;
+  --header-font: 'Playfair Display', serif;
 
-    --text-color: #333;
-    --light-text: #fff;
-    --accent-color: #000;
-    --background-color: #f9f6f2;
-    --content-bg: #ffffff;
-    --border-color: #e0e0e0;
-    --status-up-color: #28a745;
-    --status-down-color: #dc3545;
-    --error-color: #dc3545;
-    --link-color: #0056b3;
-    --ai-bg-color: #f1f1f1;
-    --ai-note-color: #555;
+  --text-color: #333;
+  --light-text: #fff;
+  --accent-color: #000;
+  --background-color: #f9f6f2;
+  --content-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --status-up-color: #28a745;
+  --status-down-color: #dc3545;
+  --error-color: #dc3545;
+  --link-color: #0056b3;
+  --ai-bg-color: #f1f1f1;
+  --ai-note-color: #555;
 
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
-    --spacing-xxl: 3rem;
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-xxl: 3rem;
 
-    /* Transitions */
-    --transition-speed: 0.3s;
+  /* Transitions */
+  --transition-speed: 0.3s;
 }
 
 /* --- Basic Reset & Base Styles --- */
 *,
 *::before,
 *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html {
-    font-size: 16px;
-    scroll-behavior: smooth;
-    height: 100%;
+  font-size: 16px;
+  scroll-behavior: smooth;
+  height: 100%;
 }
 
 body {
-    font-family: var(--paragraph-font);
-    color: var(--text-color);
-    background-color: var(--background-color);
-    line-height: 1.6;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    /* Ensure footer stays at bottom */
+  font-family: var(--paragraph-font);
+  color: var(--text-color);
+  background-color: var(--background-color);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* Ensure footer stays at bottom */
 }
 
 main {
-    flex-grow: 1;
-    padding: var(--spacing-lg) 0;
+  flex-grow: 1;
+  padding: var(--spacing-lg) 0;
 }
 
 /* --- Header & Footer --- */
 #main-header,
 #main-footer {
-    background-color: var(--main-color);
-    color: var(--accent-color);
-    padding: var(--spacing-md) var(--spacing-lg);
-    text-align: center;
-    flex-shrink: 0;
+  background-color: var(--main-color);
+  color: var(--accent-color);
+  padding: var(--spacing-md) var(--spacing-lg);
+  text-align: center;
+  flex-shrink: 0;
 }
 
 #main-header {
-    border-bottom: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--accent-color) 70%, transparent);
 }
 
 #main-footer {
-    margin-top: var(--spacing-xl);
-    border-top: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
-    font-size: 0.9rem;
+  margin-top: var(--spacing-xl);
+  border-top: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
+  font-size: 0.9rem;
 }
 
 /* Style links within header/footer if needed (requires content) */
 #main-header a,
 #main-footer a {
-    color: var(--accent-color);
-    text-decoration: none;
-    font-weight: bold;
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: bold;
 }
 
 #main-header a:hover,
 #main-footer a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 h1 {
-    font-size: 3.5rem;
+  font-size: 3.5rem;
 }
 
 /* --- Main Content Container --- */
 .realm-detail {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: var(--spacing-lg) var(--spacing-xl);
-    background-color: var(--content-bg);
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    border: 1px solid var(--border-color);
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background-color: var(--content-bg);
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
 }
 
 /* --- Headings --- */
 h2 {
-    font-family: var(--header-font);
-    color: #c50000;
-    margin-bottom: var(--spacing-md);
-    line-height: 1.3;
+  font-family: var(--header-font);
+  color: #c50000;
+  margin-bottom: var(--spacing-md);
+  line-height: 1.3;
 }
 
 #realmName {
-    font-size: 2.8rem;
-    text-align: center;
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--border-color);
-    word-wrap: break-word;
-    /* Ensure long names wrap */
+  font-size: 2.8rem;
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  word-wrap: break-word;
+  /* Ensure long names wrap */
 }
 
 #ai-summary-container h3 {
-    font-size: 2rem;
-    margin-bottom: var(--spacing-sm);
-    text-align: center;
-    padding-bottom: 10px;
-    color: #0074f0;
+  font-size: 2rem;
+  margin-bottom: var(--spacing-sm);
+  text-align: center;
+  padding-bottom: 10px;
+  color: #0074f0;
 }
 
 /* --- Realm Core Details --- */
 #realm-core-details {
-    margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
 }
 
 /* --- Status Indicators --- */
 .status-up {
-    color: var(--status-up-color);
-    font-weight: bold;
+  color: var(--status-up-color);
+  font-weight: bold;
 }
 
 .status-up::before {
-    content: '● ';
-    /* Green circle indicator */
-    color: var(--status-up-color);
+  content: '● ';
+  /* Green circle indicator */
+  color: var(--status-up-color);
 }
 
 .status-down {
-    color: var(--status-down-color);
-    font-weight: bold;
+  color: var(--status-down-color);
+  font-weight: bold;
 }
 
 .status-down::before {
-    content: '● ';
-    /* Red circle indicator */
-    color: var(--status-down-color);
+  content: '● ';
+  /* Red circle indicator */
+  color: var(--status-down-color);
 }
 
 /* --- Connected Realms --- */
 #includedRealms {
-    font-size: 1.05rem;
+  font-size: 1.05rem;
 }
 
 #includedRealms strong {
-    display: block;
-    /* Put label on its own line */
-    margin-bottom: var(--spacing-xs);
-    font-size: 1.1rem;
-    /* Make label slightly larger */
+  display: block;
+  /* Put label on its own line */
+  margin-bottom: var(--spacing-xs);
+  font-size: 1.1rem;
+  /* Make label slightly larger */
 }
 
 /* --- AI Summary Section --- */
 #ai-summary-container {
-    margin-top: var(--spacing-xl);
-    padding: var(--spacing-lg);
-    background-color: var(--ai-bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    text-align: center;
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  background-color: var(--ai-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  text-align: center;
 }
 
 #ai-summary-text {
-    margin-bottom: var(--spacing-md);
-    line-height: 1.7;
-    text-align: left;
-    color: #444;
+  margin-bottom: var(--spacing-md);
+  line-height: 1.7;
+  text-align: left;
+  color: #444;
 }
 
 #ai-timestamp {
-    font-size: 0.85rem;
-    color: var(--ai-note-color);
-    margin-bottom: var(--spacing-lg);
-    display: block;
+  font-size: 0.85rem;
+  color: var(--ai-note-color);
+  margin-bottom: var(--spacing-lg);
+  display: block;
 }
 
 /* Note below AI summary */
-#ai-summary-container>p {
-    font-size: 0.85rem;
-    color: var(--ai-note-color);
-    margin-top: var(--spacing-md);
-    font-style: italic;
-    line-height: 1.4;
+#ai-summary-container > p {
+  font-size: 0.85rem;
+  color: var(--ai-note-color);
+  margin-top: var(--spacing-md);
+  font-style: italic;
+  line-height: 1.4;
 }
 
 /* --- Buttons --- */
 .button,
 #refresh-ai-summary {
-    background-color: var(--button-bg);
-    color: var(--light-text);
-    border: none;
-    padding: var(--spacing-sm) var(--spacing-lg);
-    /* 8px 24px */
-    font-size: 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    transition:
-        background-color var(--transition-speed) ease,
-        transform 0.1s ease;
-    font-family: inherit;
-    display: inline-block;
-    text-align: center;
-    font-weight: bold;
-    margin-top: var(--spacing-sm);
+  background-color: var(--button-bg);
+  color: var(--light-text);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  /* 8px 24px */
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-speed) ease,
+    transform 0.1s ease;
+  font-family: inherit;
+  display: inline-block;
+  text-align: center;
+  font-weight: bold;
+  margin-top: var(--spacing-sm);
 }
 
 .button:hover,
 #refresh-ai-summary:hover {
-    background-color: color-mix(in srgb, var(--button-bg) 85%, #000);
+  background-color: color-mix(in srgb, var(--button-bg) 85%, #000);
 }
 
 .button:active,
 #refresh-ai-summary:active {
-    transform: translateY(1px);
+  transform: translateY(1px);
 }
 
 .button:focus,
 #refresh-ai-summary:focus {
-    outline: 3px solid var(--link-color);
-    /* Accessibility */
-    outline-offset: 2px;
+  outline: 3px solid var(--link-color);
+  /* Accessibility */
+  outline-offset: 2px;
 }
 
 .button:disabled,
 #refresh-ai-summary:disabled {
-    background-color: #999;
-    cursor: not-allowed;
-    opacity: 0.7;
+  background-color: #999;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* --- Error Message Styling --- */
 .error-message {
-    color: var(--error-color);
-    font-weight: bold;
-    background-color: color-mix(in srgb, var(--error-color) 15%, transparent);
-    border: 1px solid color-mix(in srgb, var(--error-color) 40%, transparent);
-    padding: var(--spacing-md);
-    border-radius: 5px;
-    margin: var(--spacing-md) 0;
-    text-align: center;
+  color: var(--error-color);
+  font-weight: bold;
+  background-color: color-mix(in srgb, var(--error-color) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--error-color) 40%, transparent);
+  padding: var(--spacing-md);
+  border-radius: 5px;
+  margin: var(--spacing-md) 0;
+  text-align: center;
 }
 
 /* Two columns of details */
 .details-grid {
-    display: grid;
-    width: 350px;
-    grid-template-columns: 1fr;
-    gap: var(--spacing-sm) var(--spacing-md);
-    margin-bottom: var(--spacing-xl);
-    align-items: center;
+  display: grid;
+  width: 350px;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  align-items: center;
 }
 
 .detail-item {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    text-align: left;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  text-align: left;
 }
 
 /* Style the labels */
 .detail-label {
-    font-weight: 700;
-    color: var(--text-color);
-    white-space: nowrap;
-    padding-right: var(--spacing-sm);
+  font-weight: 700;
+  color: var(--text-color);
+  white-space: nowrap;
+  padding-right: var(--spacing-sm);
 }
 
 .detail-value {
-    color: #555;
-    word-break: break-word;
+  color: #555;
+  word-break: break-word;
 }
 
 .detail-value.status-up {
-    color: var(--status-up-color);
-    font-weight: bold;
+  color: var(--status-up-color);
+  font-weight: bold;
 }
 
 .detail-value.status-up::before {
-    content: '● ';
-    /* Green circle indicator */
-    color: var(--status-up-color);
-    margin-right: var(--spacing-xs);
+  content: '● ';
+  /* Green circle indicator */
+  color: var(--status-up-color);
+  margin-right: var(--spacing-xs);
 }
 
 .detail-value.status-down {
-    color: var(--status-down-color);
-    font-weight: bold;
+  color: var(--status-down-color);
+  font-weight: bold;
 }
 
 .detail-value.status-down::before {
-    content: '● ';
-    color: var(--status-down-color);
-    margin-right: var(--spacing-xs);
+  content: '● ';
+  color: var(--status-down-color);
+  margin-right: var(--spacing-xs);
 }
 
 .connected-realms-info {
-    margin-top: var(--spacing-lg);
-    margin-bottom: var(--spacing-xl);
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
 }
 
 #includedRealms {
-    line-height: 1.7;
+  line-height: 1.7;
 }
 
 #includedRealms strong {
-    display: block;
-    margin-bottom: var(--spacing-xs);
-    font-size: 1.1rem;
-    color: var(--text-color);
-    font-weight: 700;
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: 1.1rem;
+  color: var(--text-color);
+  font-weight: 700;
 }
 
 /* --- Responsive Design --- */
 
 /* Medium screens (Tablets) */
 @media (max-width: 900px) {
-    .realm-detail {
-        margin-left: var(--spacing-md);
-        margin-right: var(--spacing-md);
-        padding: var(--spacing-lg);
-    }
+  .realm-detail {
+    margin-left: var(--spacing-md);
+    margin-right: var(--spacing-md);
+    padding: var(--spacing-lg);
+  }
 }
 
 @media (max-width: 768px) {
-    html {
-        font-size: 15px;
-    }
+  html {
+    font-size: 15px;
+  }
 
-    #realmName {
-        font-size: 2.2rem;
-    }
+  #realmName {
+    font-size: 2.2rem;
+  }
 
-    #ai-summary-container h3 {
-        font-size: 1.6rem;
-    }
+  #ai-summary-container h3 {
+    font-size: 1.6rem;
+  }
 
-    .realm-detail {
-        margin-left: var(--spacing-sm);
-        margin-right: var(--spacing-sm);
-        padding: var(--spacing-md);
-        border-radius: 5px;
-        /* Slightly less rounded */
-    }
+  .realm-detail {
+    margin-left: var(--spacing-sm);
+    margin-right: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border-radius: 5px;
+    /* Slightly less rounded */
+  }
 
-    #main-header,
-    #main-footer {
-        padding: var(--spacing-sm) var(--spacing-md);
-    }
+  #main-header,
+  #main-footer {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
 
-    #includedRealms {
-        font-size: 1rem;
-        /* Adjust paragraph size */
-    }
+  #includedRealms {
+    font-size: 1rem;
+    /* Adjust paragraph size */
+  }
 }
 
 /* Small screens (Phones) */
 @media (max-width: 480px) {
-    html {
-        font-size: 14px;
-        /* Even smaller base */
-    }
+  html {
+    font-size: 14px;
+    /* Even smaller base */
+  }
 
-    body {
-        line-height: 1.5;
-        /* Adjust line height slightly */
-    }
+  body {
+    line-height: 1.5;
+    /* Adjust line height slightly */
+  }
 
-    .realm-detail {
-        margin: 0;
-        /* Remove horizontal margin */
-        padding: var(--spacing-md);
-        border-radius: 0;
-        /* Edge-to-edge feel */
-        border-left: none;
-        border-right: none;
-        box-shadow: none;
-        /* Remove shadow on small screens */
-    }
+  .realm-detail {
+    margin: 0;
+    /* Remove horizontal margin */
+    padding: var(--spacing-md);
+    border-radius: 0;
+    /* Edge-to-edge feel */
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+    /* Remove shadow on small screens */
+  }
 
-    #realmName {
-        font-size: 1.9rem;
-        padding-bottom: var(--spacing-sm);
-        margin-bottom: var(--spacing-md);
-    }
+  #realmName {
+    font-size: 1.9rem;
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
 
-    #ai-summary-container h3 {
-        font-size: 1.4rem;
-    }
+  #ai-summary-container h3 {
+    font-size: 1.4rem;
+  }
 
-    #ai-summary-container {
-        padding: var(--spacing-md);
-    }
+  #ai-summary-container {
+    padding: var(--spacing-md);
+  }
 
-    .button,
-    #refresh-ai-summary {
-        width: 100%;
-        padding: var(--spacing-md) var(--spacing-lg);
-        font-size: 0.95rem;
-    }
+  .button,
+  #refresh-ai-summary {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 0.95rem;
+  }
 }

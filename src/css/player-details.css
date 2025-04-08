@@ -1,0 +1,215 @@
+:root {
+    --header-footer-color: #ffdda9;
+    --accent-color: #000000d7;
+
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+}
+
+/* --- Header & Footer --- */
+#main-header,
+#main-footer {
+    background-color: var(--header-footer-color);
+    color: var(--accent-color);
+    padding: var(--spacing-md) var(--spacing-lg);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+#main-header {
+    border-bottom: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
+}
+
+#main-footer {
+    margin-top: var(--spacing-xl);
+    border-top: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
+    font-size: 0.9rem;
+}
+
+#main-header a,
+#main-footer a {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#main-header a:hover,
+#main-footer a:hover {
+    text-decoration: underline;
+}
+
+h1 {
+    font-size: 3.5rem;
+}
+
+body {
+    font-family: 'PT Serif', serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+#main_body {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+#character-name-title {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #5a4a3a;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+    .details-grid {
+        grid-template-columns: auto 1fr;
+        gap: 2rem;
+    }
+
+    #detail-col-left {
+        max-width: 200px;
+    }
+}
+
+#player-avatar-container {
+    text-align: center;
+    margin-bottom: 1rem;
+    min-height: 150px;
+    border: 1px solid #eee;
+    padding: 0.5rem;
+    background-color: #fafafa;
+    border-radius: 4px;
+}
+
+#player-avatar {
+    max-width: 100%;
+    height: auto;
+    border-radius: 3px;
+    display: block;
+    margin: 0 auto;
+}
+
+#avatar-loading,
+#avatar-unavailable {
+    color: #888;
+    font-style: italic;
+    padding: 2rem 0;
+}
+
+.detail-item {
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px dotted #eee;
+    line-height: 1.5;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.detail-label {
+    font-weight: bold;
+    color: #555;
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.9rem;
+}
+
+.detail-value {
+    color: #333;
+    font-size: 1rem;
+}
+
+/* Faction coloring */
+.faction-alliance {
+    color: #1a5cff;
+    font-weight: bold;
+}
+
+.faction-horde {
+    color: #ff1a1a;
+    font-weight: bold;
+}
+
+/* AI Summary Section */
+#ai-summary-container {
+    border-top: 2px solid #e0e0e0;
+    padding-top: 1.5rem;
+}
+
+#ai-summary-container h3 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #6a5a4a;
+    font-family: 'Playfair Display', serif;
+}
+
+#ai-summary-content {
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+#ai-summary-text {
+    margin: 0;
+}
+
+#ai-timestamp {
+    display: block;
+    text-align: right;
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 0.5rem;
+}
+
+#refresh-ai-summary {
+    display: block;
+    margin: 0 auto;
+    padding: 0.6rem 1.5rem;
+    background-color: #8e765c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#refresh-ai-summary:hover {
+    background-color: #7a6049;
+}
+
+#refresh-ai-summary:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #d9534f;
+    /* Red for errors */
+    background-color: #f2dede;
+    border: 1px solid #ebccd1;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 1.5rem;
+    text-align: center;
+}

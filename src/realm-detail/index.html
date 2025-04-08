@@ -1,107 +1,112 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Realm Details</title>
+    <!-- Link Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Realm Details</title>
-  <!-- Link Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
-    rel="stylesheet" />
+    <!-- Link CSS -->
+    <link rel="stylesheet" href="/css/realm-details.css" />
 
-  <!-- Link CSS -->
-  <link rel="stylesheet" href="/css/realm-details.css" />
+    <!-- Favicon -->
+    <link rel="icon" href="images/favicon.ico" />
 
-  <!-- Favicon -->
-  <link rel="icon" href="images/favicon.ico" />
+    <!-- Link JS -->
+    <script src="/js/realm-detail.js" type="module"></script>
+  </head>
 
-  <!-- Link JS -->
-  <script src="/js/realm-detail.js" type="module"></script>
-</head>
-
-<body>
-  <header id="main-header"></header>
-  <main>
-    <section class="realm-detail">
-      <h2 id="realmName">Loading...</h2>
-      <div id="realm-core-details" class="details-grid">
-        <div class="detail-item">
-          <div class="detail-left">
-            <span class="detail-label">Region:</span>
+  <body>
+    <header id="main-header"></header>
+    <main>
+      <section class="realm-detail">
+        <h2 id="realmName">Loading...</h2>
+        <div id="realm-core-details" class="details-grid">
+          <div class="detail-item">
+            <div class="detail-left">
+              <span class="detail-label">Region:</span>
+            </div>
+            <div class="detail-right">
+              <span class="detail-value" id="realmRegionValue">Loading...</span>
+            </div>
           </div>
-          <div class="detail-right">
-            <span class="detail-value" id="realmRegionValue">Loading...</span>
+          <div class="detail-item">
+            <div class="detail-left">
+              <span class="detail-label">Status:</span>
+            </div>
+            <div class="detail-right">
+              <span class="detail-value" id="realmStatusValue">Loading...</span>
+            </div>
           </div>
+          <div class="detail-item">
+            <div class="detail-left">
+              <span class="detail-label">Population:</span>
+            </div>
+            <div class="detail-right">
+              <span class="detail-value" id="realmPopulationValue"
+                >Loading...</span
+              >
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-left">
+              <span class="detail-label">Type:</span>
+            </div>
+            <div class="detail-right">
+              <span class="detail-value" id="realmTypeValue">Loading...</span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-left">
+              <span class="detail-label">Community:</span>
+            </div>
+            <div class="detail-right">
+              <span class="detail-value" id="realmCategoryValue"
+                >Loading...</span
+              >
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-left">
+              <span class="detail-label">Timezone:</span>
+            </div>
+            <div class="detail-right">
+              <span class="detail-value" id="realmTimezoneValue"
+                >Loading...</span
+              >
+            </div>
+          </div>
+          <!-- Connected Realms remains separate for now, or could be integrated -->
         </div>
-        <div class="detail-item">
-          <div class="detail-left">
-            <span class="detail-label">Status:</span>
-          </div>
-          <div class="detail-right">
-            <span class="detail-value" id="realmStatusValue">Loading...</span>
-          </div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-left">
-            <span class="detail-label">Population:</span>
-          </div>
-          <div class="detail-right">
-            <span class="detail-value" id="realmPopulationValue">Loading...</span>
-          </div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-left">
-            <span class="detail-label">Type:</span>
-          </div>
-          <div class="detail-right">
-            <span class="detail-value" id="realmTypeValue">Loading...</span>
-          </div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-left">
-            <span class="detail-label">Community:</span>
-          </div>
-          <div class="detail-right">
-            <span class="detail-value" id="realmCategoryValue">Loading...</span>
-          </div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-left">
-            <span class="detail-label">Timezone:</span>
-          </div>
-          <div class="detail-right">
-            <span class="detail-value" id="realmTimezoneValue">Loading...</span>
-          </div>
-        </div>
-        <!-- Connected Realms remains separate for now, or could be integrated -->
-      </div>
 
-      <!-- Keep Included Realms potentially outside the grid or as a special item -->
-      <div id="connected-realms-container" class="connected-realms-info">
-        <p id="includedRealms">
-          <strong>Connected Realms:</strong> Loading...
-        </p>
-      </div>
+        <!-- Keep Included Realms potentially outside the grid or as a special item -->
+        <div id="connected-realms-container" class="connected-realms-info">
+          <p id="includedRealms">
+            <strong>Connected Realms:</strong> Loading...
+          </p>
+        </div>
 
-      <!-- AI Summary Section -->
-      <section id="ai-summary-container" style="display: none">
-        <h3>Realm Summary (AI Generated)</h3>
-        <div id="ai-summary-text">Loading summary...</div>
-        <div id="ai-timestamp"></div>
-        <button id="refresh-ai-summary" class="button">
-          Refresh Summary
-        </button>
-        <p>
-          Note: Generated by Gemini 2.0 Flash model and may occasionally
-          contain inaccuracies.
-        </p>
+        <!-- AI Summary Section -->
+        <section id="ai-summary-container" style="display: none">
+          <h3>Realm Summary (AI Generated)</h3>
+          <div id="ai-summary-text">Loading summary...</div>
+          <div id="ai-timestamp"></div>
+          <button id="refresh-ai-summary" class="button">
+            Refresh Summary
+          </button>
+          <p>
+            Note: Generated by Gemini 2.0 Flash model and may occasionally
+            contain inaccuracies.
+          </p>
+        </section>
       </section>
-    </section>
-  </main>
-  <footer id="main-footer"></footer>
-</body>
-
+    </main>
+    <footer id="main-footer"></footer>
+  </body>
 </html>

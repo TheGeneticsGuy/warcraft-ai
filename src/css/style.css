@@ -1,9 +1,9 @@
 :root {
   --header-footer-color: #ffdda9;
+  --accent-color: #000000d7;
   --nav-color: #444;
   --button-color: #473d3a;
   --secondary-color: #b25e39;
-  --accent-color: #000000d7;
 
   /* Text Color */
   --primarytext-color: black;
@@ -49,8 +49,7 @@ body {
 }
 
 #main-header {
-  border-bottom: 2px solid
-    color-mix(in srgb, var(--accent-color) 70%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
 }
 
 #main-footer {

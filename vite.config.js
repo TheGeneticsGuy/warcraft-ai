@@ -8,9 +8,11 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'src/index.html'), // Your home page
-        realms: resolve(__dirname, 'src/realms/index.html'), // Your existing realms page
-        realmDetail: resolve(__dirname, 'src/realm-detail/index.html'), // New detail page
+        main: resolve(__dirname, 'src/index.html'), // home page
+        realms: resolve(__dirname, 'src/realms/index.html'), //  realms page
+        realmDetail: resolve(__dirname, 'src/realm-detail/index.html'), // realm detail page
+        players: resolve(__dirname, 'src/players/index.html'), // Player Search Page
+        playerDetail: resolve(__dirname, 'src/player-details/index.html'), // New detail page
       },
     },
   },

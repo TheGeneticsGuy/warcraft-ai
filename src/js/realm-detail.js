@@ -6,29 +6,25 @@ import {
     getPrimaryRealmName,
 } from './utils.mjs'; // Adjust path as needed
 import { getAccessToken } from './blizzAPI.js'; // Adjust path as needed
-import ENV from './env.js'; // Needed for the AI part (securely, see below)
 
 // --- Constants ---
 const AI_CACHE_PREFIX = 'aiSummary-';
-// IMPORTANT: Replace with your backend endpoint URL or remove if not using AI
-const AI_API_ENDPOINT = '/api/get-realm-summary'; // Example backend endpoint
+// IMPORTANT: I will need  to replace this with my backend end point eventually...
 
 // --- DOM Elements ---
-const realmDetailSection = document.querySelector('.realm-detail');
 const realmNameEl = document.querySelector('#realmName');
-const realmRegionEl = document.querySelector('#realmRegion');
-const realmStatusEl = document.querySelector('#realmStatus');
-const realmPopulationEl = document.querySelector('#realmPopulation');
-const realmTypeEl = document.querySelector('#realmType');
-const realmCategoryEl = document.querySelector('#realmCategory');
-const realmTimezoneEl = document.querySelector('#realmTimezone');
+const realmRegionValueEl = document.querySelector('#realmRegionValue');
+const realmStatusValueEl = document.querySelector('#realmStatusValue');
+const realmPopulationValueEl = document.querySelector('#realmPopulationValue');
+const realmTypeValueEl = document.querySelector('#realmTypeValue');
+const realmCategoryValueEl = document.querySelector('#realmCategoryValue');
+const realmTimezoneValueEl = document.querySelector('#realmTimezoneValue');
 const includedRealmsEl = document.querySelector('#includedRealms');
 const aiSummaryContainer = document.querySelector('#ai-summary-container');
 const aiSummaryText = document.querySelector('#ai-summary-text');
 const aiTimestamp = document.querySelector('#ai-timestamp');
 const refreshAiButton = document.querySelector('#refresh-ai-summary');
-
-// --- Main Logic ---
+const realmDetailSection = document.querySelector('.realm-detail');
 
 async function fetchRealmDetailsApi(
     region,
@@ -90,10 +86,6 @@ async function fetchRealmDetailsApi(
                 if (foundRealm) {
                     // Found the connected realm group! Use its data.
                     targetConnectedRealmData = result.data;
-                    console.log(
-                        `Found matching connected realm group for slug '${realmSlug}':`,
-                        targetConnectedRealmData,
-                    );
                     break; // Stop searching once found
                 }
             } else {
@@ -110,7 +102,6 @@ async function fetchRealmDetailsApi(
                 `Realm slug '${realmSlug}' not found within any connected realm group in region '${region}' namespace '${fullApiNamespace}'. Check if the slug and namespace are correct.`,
             );
             // Provide a more informative error, potentially listing available slugs if feasible (for debugging)
-            // console.log("Available slugs in first few results:", searchData.results.slice(0, 5).flatMap(r => r.data?.realms?.map(realm => realm.slug) || []));
             return {
                 name: realmSlug
                     .replace(/-/g, ' ')
@@ -151,7 +142,6 @@ async function fetchRealmDetailsApi(
             region: getPrimaryRealmName(primaryRealm.region.name), // Apply utility here
         };
 
-        console.log('Formatted Realm Details:', realmDetails);
         return realmDetails;
     } catch (error) {
         console.error(
@@ -165,40 +155,63 @@ async function fetchRealmDetailsApi(
 }
 
 // Render the fetched Blizzard realm details to the page
-function renderBlizzardDetails(
-    realm,
-    regionParam,
-    urlTypeParam,
-    realmSlugParam,
-) {
+function renderBlizzardDetails(realm, regionParam) {
     if (!realm) {
-        // Error message already shown by fetch function or renderRealmDetails caller
-        return;
+        return; // Error handled elsewhere
     }
+    // Handle API error case
     if (realm.error) {
-        // Handle case where connected realm wasn't found but we got basic info
         realmNameEl.textContent = realm.name || 'Unknown Realm';
-        realmRegionEl.textContent = `Region: ${regionParam}`;
-        realmTypeEl.textContent = `Type: ${urlTypeParam}`;
-        realmDetailSection.innerHTML += `<p class="error-message">${realm.error}</p>`;
-        // Hide or disable AI section if core data is missing
+        // Clear or hide the structured details if there's a fundamental error
+        const coreDetailsDiv = document.querySelector('#realm-core-details');
+        if (coreDetailsDiv)
+            coreDetailsDiv.innerHTML = `<p class="error-message">Could not load details: ${realm.error}</p>`;
+        const connectedRealmsDiv = document.querySelector(
+            '#connected-realms-container',
+        );
+        if (connectedRealmsDiv) connectedRealmsDiv.style.display = 'none';
         if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';
         return;
     }
 
+    // Update Realm Name
     realmNameEl.textContent = realm.name || 'Unknown Realm';
-    realmRegionEl.textContent = `Region: ${realm.region || regionParam}`; // Use API region name if available
-    realmStatusEl.textContent = `Status: ${realm.statusLocalized || realm.status}`;
-    realmStatusEl.className = realm.status === 'UP' ? 'status-up' : 'status-down'; // Add class for styling
-    realmPopulationEl.textContent = `Population: ${realm.populationLocalized || realm.population}`;
-    realmTypeEl.textContent = `Type: ${realm.type}`;
-    realmCategoryEl.textContent = `Category: ${realm.category}`; // May vary per realm in group
-    realmTimezoneEl.textContent = `Timezone: ${realm.timezone}`;
 
-    if (realm.realms && realm.realms.length > 1) {
-        includedRealmsEl.innerHTML = `<strong>Connected Realms:</strong> ${realm.realms.map((r) => r.name).join(', ')}`;
-    } else {
-        includedRealmsEl.textContent = 'This is a single realm.';
+    // Update Core Detail Values
+    if (realmRegionValueEl)
+        realmRegionValueEl.textContent = realm.region || regionParam;
+    if (realmStatusValueEl) {
+        realmStatusValueEl.textContent = realm.statusLocalized || realm.status;
+        realmStatusValueEl.className = 'detail-value'; // Reset classes first
+        if (realm.status === 'UP') {
+            realmStatusValueEl.classList.add('status-up');
+        } else if (realm.status) {
+            // Check if status exists before adding down class
+            realmStatusValueEl.classList.add('status-down');
+        }
+    }
+    if (realmPopulationValueEl)
+        realmPopulationValueEl.textContent =
+            realm.populationLocalized || realm.population;
+    if (realmTypeValueEl) realmTypeValueEl.textContent = realm.type;
+    if (realmCategoryValueEl) realmCategoryValueEl.textContent = realm.category; // Changed label to 'Category' to match JS
+    if (realmTimezoneValueEl) realmTimezoneValueEl.textContent = realm.timezone;
+
+    // Update Connected Realms (in its separate container)
+    const connectedRealmsDiv = document.querySelector(
+        '#connected-realms-container',
+    );
+    if (includedRealmsEl && connectedRealmsDiv) {
+        if (realm.realms && realm.realms.length > 1) {
+            includedRealmsEl.innerHTML = `<strong>Connected Realms:</strong> ${realm.realms.map((r) => r.name).join(', ')}`;
+            connectedRealmsDiv.style.display = 'block'; // Ensure it's visible
+        } else {
+            includedRealmsEl.innerHTML =
+                '<strong>Connected Realms:</strong> This is a single realm.';
+            connectedRealmsDiv.style.display = 'block'; // Same
+        }
+    } else if (connectedRealmsDiv) {
+        connectedRealmsDiv.style.display = 'none'; // Hide if element not found
     }
 
     // Enable AI section now that we have data
@@ -210,28 +223,28 @@ function renderBlizzardDetails(
 /**
  * Fetches AI summary from the backend (SECURE WAY)
  */
-async function fetchAiSummaryFromBackend(realmName, region) {
-    try {
-        const response = await fetch(AI_API_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ realmName, region }),
-        });
-        if (!response.ok) {
-            const errorData = await response
-                .json()
-                .catch(() => ({ message: response.statusText }));
-            throw new Error(
-                `Backend AI request failed: ${errorData.message || response.status}`,
-            );
-        }
-        const data = await response.json();
-        return data.summary; // Assuming your backend returns { summary: "..." }
-    } catch (error) {
-        console.error('Error fetching AI summary from backend:', error);
-        return `Error generating summary: ${error.message}`;
-    }
-}
+// async function fetchAiSummaryFromBackend(realmName, region) {
+//     try {
+//         const response = await fetch(AI_API_ENDPOINT, {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ realmName, region }),
+//         });
+//         if (!response.ok) {
+//             const errorData = await response
+//                 .json()
+//                 .catch(() => ({ message: response.statusText }));
+//             throw new Error(
+//                 `Backend AI request failed: ${errorData.message || response.status}`,
+//             );
+//         }
+//         const data = await response.json();
+//         return data.summary; // Assuming your backend returns { summary: "..." }
+//     } catch (error) {
+//         console.error('Error fetching AI summary from backend:', error);
+//         return `Error generating summary: ${error.message}`;
+//     }
+// }
 
 async function fetchAiSummaryDirectly(realmName, region) {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Access Vite env var
@@ -241,13 +254,14 @@ async function fetchAiSummaryDirectly(realmName, region) {
         return 'AI summary configuration error (missing key).';
     }
 
-    const bestGuilds = 'https://www.esportsbets.com/wow/best-guilds/'
-    const bestdps = 'https://raider.io/mythic-plus-character-rankings/season-tww-2/world/all/dps'
-    const besthealer = 'https://raider.io/mythic-plus-character-rankings/season-tww-2/world/all/healer'
-    const bestRaidGuild = 'https://raider.io/liberation-of-undermine/realm-rankings/world/all/mythic'
+    // For expaneded AI use one day.
+    // const bestGuilds = 'https://www.esportsbets.com/wow/best-guilds/'
+    // const bestdps = 'https://raider.io/mythic-plus-character-rankings/season-tww-2/world/all/dps'
+    // const besthealer = 'https://raider.io/mythic-plus-character-rankings/season-tww-2/world/all/healer'
+    // const bestRaidGuild = 'https://raider.io/liberation-of-undermine/realm-rankings/world/all/mythic'
 
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    const prompt = `Provide a brief, objective historical summary (2-3 sentences) of the World of Warcraft realm "${realmName}" in the "${region}" region. Focus on its origin, type (PvP/PvE/RP), and any notable characteristics or major historical events if widely known. Try to do a deep search for any notable historical events or interesting details around the server. If there are any famous guilds or people connected to that realm, please mention so. For example, if there are famous guilds, like Liquid Guild (US on Illidan), or Echo(EU on TarrenMill) or Method (EU on TwistingNether), or Instant Dollars (US Malganis) or Mate (KR Azshara), and so on, mention so. You can reference sites like ${bestGuilds} or best raid guilds here ${bestRaidGuild} or best worldwide dps here ${bestdps} or best healer here ${besthealer}. Feel free to use those as sources for up-to-date player info on realms. If information is scarce, state that. Avoid speculation.`;
+    const prompt = `Adopt the persona of a knowledgeable Azerothian chronicler. Provide a brief (3-6 sentences) yet evocative historical summary of the World of Warcraft realm "${realmName}" in the "${region}" region. Be explicit in including the month and/or year if that is known, when the realm was established. It is ok to add additional flair to the warcraft events around that time, but be sure to mention the real-world time period. Weave in details about its origin, type (PvP/PvE/RP), and any widely known historical events, legendary guilds (like Liquid, Echo, Method, etc., if applicable and known for this realm), or renowned figures connected to it, drawing from established Warcraft history and community knowledge (similar to information found on sites like Raider.io or Esportsbets). Maintain factual accuracy where possible, but present the information with a touch of narrative flair appropriate for Warcraft lore. If verifiable history or notable tales are scarce for this realm, acknowledge this humbly. Avoid pure speculation.`;
 
     try {
         const response = await fetch(API_URL, {
@@ -329,7 +343,6 @@ async function displayAiSummary(
 
         timestamp = new Date().toISOString();
         localStorage.setItem(cacheKey, JSON.stringify({ summary, timestamp }));
-        console.log('Generated and cached new AI summary for', realmSlug);
 
         refreshAiButton.disabled = false; // Re-enable button
     }

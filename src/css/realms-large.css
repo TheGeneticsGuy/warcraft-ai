@@ -1,97 +1,56 @@
-@media screen and (min-width: 550px) {
-  #header-left {
-    min-width: 700px;
-  }
+#upper_main {
+  flex-direction: column;
+  align-items: stretch;
 }
 
-@media screen and (min-width: 625px) {
-  .icon-menu {
-    display: none;
-  }
-
-  .navigation li {
-    display: block;
-    flex: 1 1 auto;
-  }
-
-  .navigation {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    /* Add this to center the nav items */
-    width: 100%;
-  }
+#filter-button-container,
+#right-upper-main {
+  align-items: center;
+  justify-content: center;
 }
 
-@media screen and (min-width: 768px) {
-  #footer-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    padding: 2rem;
-    max-width: 1600px;
-    width: 100%;
-  }
+#filter-button-container {
+  justify-content: flex-start !important;
+}
 
-  #footer-left,
-  #footer-right {
-    text-align: left;
-  }
+.realm-status,
+.realm-population {
+  display: grid;
+}
 
-  #upper_main {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.realm-item {
+  grid-template-columns: repeat(3, 1fr);
+  cursor: auto;
+}
 
-  #filter-button-container,
-  #right-upper-main {
-    align-items: center;
-    justify-content: center;
-  }
+#upper_main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+}
 
-  #filter-button-container {
-    justify-content: flex-start !important;
-  }
+#right-upper-main {
+  margin-top: 0;
+}
 
-  .realm-status,
-  .realm-population {
-    display: grid;
-  }
+#modal-click-msg {
+  display: none;
+}
 
-  .realm-item {
-    grid-template-columns: repeat(3, 1fr);
-    cursor: auto;
-  }
+/* REMOVE TRANSITION IN MOBILE */
+#realms-header {
+  transition: 0.3s ease-in-out;
+}
 
-  #upper_main {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-  }
+#realms-header:hover {
+  transform: scale(1.1);
+}
 
-  #right-upper-main {
-    margin-top: 0;
-  }
+.addon-card img {
+  transition: transform 1.5s ease;
+  transform: rotate(360deg);
+}
 
-  #modal-click-msg {
-    display: none;
-  }
-
-  /* REMOVE TRANSITION IN MOBILE */
-  #realms-header {
-    transition: 0.3s ease-in-out;
-  }
-
-  #realms-header:hover {
-    transform: scale(1.1);
-  }
-
-  .addon-card img {
-    transition: transform 1.5s ease;
-    transform: rotate(360deg);
-  }
-
-  .addon-card:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    transform: scale(1.05);
-  }
+.addon-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
 }

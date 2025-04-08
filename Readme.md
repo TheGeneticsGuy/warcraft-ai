@@ -1,8 +1,7 @@
 # Warcraft AI Reporter
 
-![Warcraft AI Reporter](https://github.com/TheGeneticsGuy/warcraft-ai/tree/main/src/public/images/link-image.webp)
+![Warcraft AI Reporter](https://i.imgur.com/hp9StIT.jpeg)
 
-## Class Details
 
 **Author:** Aaron Topping
 **Class:** WDD 330 - BYU-Idaho, Winter Session 2025

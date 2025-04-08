@@ -4,7 +4,7 @@ import {
   mapUrlTypeToApiNamespace,
   getPrimaryName,
 } from './utils.mjs';
-import { getAccessToken } from './blizzAPI.js'; // Now needed for realm list AND pre-check
+import { getAccessToken } from './blizzAPI.js';
 
 // --- Constants ---
 const DEFAULT_URL_TYPE = 'retail';
@@ -91,7 +91,7 @@ async function fetchRealmListForDropdown(region, urlType) {
     return [];
   }
 
-  const apiNamespacePrefix = mapUrlTypeToApiNamespace(urlType, 'dynamic'); // Use dynamic for realm index
+  const apiNamespacePrefix = mapUrlTypeToApiNamespace(urlType, 'dynamic');
   if (!apiNamespacePrefix) {
     console.error(
       `Could not determine namespace prefix for urlType: ${urlType}`,
@@ -100,12 +100,12 @@ async function fetchRealmListForDropdown(region, urlType) {
   }
 
   const fullApiNamespace = `${apiNamespacePrefix}-${region}`;
+  // Use the /realm/index endpoint, explicitly requesting en_US for dropdown names
   const apiUrl = `https://${region}.api.blizzard.com/data/wow/realm/index?namespace=${fullApiNamespace}&locale=en_US`;
 
   console.log(`Fetching realms from: ${apiUrl}`);
 
   try {
-    // Use the basic fetch here, as we want the JSON directly
     const response = await fetch(apiUrl, {
       headers: { Authorization: `Bearer ${blizzardToken}` },
     });
@@ -127,18 +127,28 @@ async function fetchRealmListForDropdown(region, urlType) {
     }
 
     const realms = data.realms
-      .map((realm) => ({
-        name: getPrimaryName(realm.name),
-        slug: realm.slug,
-      }))
-      .filter((realm) => realm.name !== 'N/A' && realm.slug)
+      .map((realm) => {
+        const name = getPrimaryName(realm.name);
+        const slug = realm.slug;
+
+        if (!name || !slug) {
+          return null;
+        }
+
+        return { name, slug };
+      })
+      .filter((realm) => realm !== null)
       .filter(
         (realm) =>
-          !realm.name?.startsWith('Test Realm') &&
-          !realm.name?.startsWith('US PS'),
+          !realm.name.startsWith('Test Realm') &&
+          !realm.name.startsWith('US') &&
+          !realm.name.includes('CWOW'),
       )
       .sort((a, b) => a.name.localeCompare(b.name));
 
+    console.log(
+      `[Players Page] Found ${realms.length} valid individual realms after filtering.`,
+    );
     return realms;
   } catch (error) {
     console.error('Error in fetchRealmListForDropdown:', error);
@@ -146,9 +156,8 @@ async function fetchRealmListForDropdown(region, urlType) {
   }
 }
 
-// Populates the realm dropdown
 function populateRealmDropdown(realms) {
-  realmDropdown.innerHTML = ''; // Clear
+  realmDropdown.innerHTML = '';
 
   if (!realms || realms.length === 0) {
     realmDropdown.innerHTML =
@@ -157,7 +166,7 @@ function populateRealmDropdown(realms) {
     return;
   }
 
-  realmDropdown.innerHTML = '<option value="">-- Select a Realm --</option>'; // Default empty option
+  realmDropdown.innerHTML = '<option value="">-- Select a Realm --</option>';
 
   realms.forEach((realm) => {
     const option = document.createElement('option');
@@ -166,10 +175,9 @@ function populateRealmDropdown(realms) {
     realmDropdown.appendChild(option);
   });
 
-  realmDropdown.disabled = false; // Enable
+  realmDropdown.disabled = false;
 }
 
-// Orchestrates fetching and displaying the realm list
 async function triggerRealmListUpdate() {
   clearError();
   realmDropdown.disabled = true;
@@ -179,7 +187,7 @@ async function triggerRealmListUpdate() {
   try {
     if (!blizzardToken) {
       console.log('Fetching initial access token for realm list...');
-      blizzardToken = await getAccessToken(); // Fetch token if needed
+      blizzardToken = await getAccessToken();
       if (!blizzardToken) {
         throw new Error('Authentication failed. Cannot load realms.');
       }
@@ -237,9 +245,8 @@ searchButton.addEventListener('click', async () => {
     return;
   }
 
-  // --- Pre-check if Character Exists ---
-  searchButton.disabled = true; // Disable button during check
-  searchButton.textContent = 'Verifying...'; // Provide feedback
+  searchButton.disabled = true;
+  searchButton.textContent = 'Verifying...';
   let characterExists = false;
 
   try {
@@ -265,9 +272,8 @@ searchButton.addEventListener('click', async () => {
     const checkUrl = `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${characterName}?namespace=${fullProfileNamespace}&locale=en_US`;
     console.log(`Pre-checking player existence: ${checkUrl}`);
 
-    // Use fetchWithTimeout to make the request
     const checkResponse = await fetchWithTimeout(checkUrl, {
-      method: 'GET', // GET is fine, payload is small
+      method: 'GET',
       headers: { Authorization: `Bearer ${blizzardToken}` },
     });
 
@@ -342,8 +348,7 @@ async function initializePage() {
     `Initial State: Region=${currentRegion}, UrlType=${currentUrlType}`,
   );
 
-  // Trigger the first realm list load
-  await triggerRealmListUpdate(); // This now handles token fetching internally if needed
+  await triggerRealmListUpdate();
 }
 
 document.addEventListener('DOMContentLoaded', initializePage);

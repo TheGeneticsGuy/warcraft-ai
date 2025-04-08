@@ -16,7 +16,7 @@
   padding: 0 1rem;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 1rem;
 }
 
 /* --- Welcome Section --- */
@@ -55,7 +55,7 @@
   font-family: var(--paragraph-font);
   color: #5a4a3a;
   margin-bottom: 2rem;
-  font-size: 1.6rem;
+  font-size: 2rem;
 }
 
 .nav-card-container {
@@ -76,7 +76,7 @@
   width: 300px;
   text-decoration: none;
   color: inherit;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
   transition:
     transform 0.2s ease-in-out,
     box-shadow 0.2s ease-in-out;
@@ -85,14 +85,14 @@
 
 .nav-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
   border-color: #c0a88d;
 }
 
 .nav-card-icon {
   margin-bottom: 1rem;
-  width: 80px;
-  height: 80px;
+  width: 100%;
+  height: auto;
 }
 
 .nav-card-icon img {

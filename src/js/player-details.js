@@ -169,20 +169,20 @@ async function fetchPlayerData(
       mountsCollection:
         urlType !== 'classicera'
           ? fetchWithTimeout(`${baseUrl}/collections/mounts${profileParams}`, {
-            headers,
-          }).catch((e) => {
-            console.warn('Mounts fetch failed (non-critical):', e);
-            return null;
-          })
+              headers,
+            }).catch((e) => {
+              console.warn('Mounts fetch failed (non-critical):', e);
+              return null;
+            })
           : Promise.resolve(null),
       petsCollection:
         urlType !== 'classicera'
           ? fetchWithTimeout(`${baseUrl}/collections/pets${profileParams}`, {
-            headers,
-          }).catch((e) => {
-            console.warn('Pets fetch failed (non-critical):', e);
-            return null;
-          })
+              headers,
+            }).catch((e) => {
+              console.warn('Pets fetch failed (non-critical):', e);
+              return null;
+            })
           : Promise.resolve(null),
       achievementSummary: fetchWithTimeout(
         `${baseUrl}/achievements${profileParams}`,
@@ -509,7 +509,7 @@ async function fetchAiSummaryDirectly(playerData) {
       console.error('Gemini API Error Response:', errorBody);
       throw new Error(
         errorBody.error?.message ||
-        `Gemini API request failed: ${response.status}`,
+          `Gemini API request failed: ${response.status}`,
       );
     }
     const data = await response.json();

@@ -1,5 +1,5 @@
 import { getAccessToken } from './blizzAPI.js';
-import { mapApiNamespaceToUrlType } from './utils.mjs';
+import { mapApiNamespaceToUrlType, getPrimaryName } from './utils.mjs';
 
 // --- Global Variables ---
 const locales = [
@@ -25,8 +25,8 @@ const namespace = {
 
 let currentRegion = '';
 let currentLocale = '';
-let currentNamespace = ''; // API namespace prefix (e.g., 'dynamic', 'dynamic-classic')
-let currentUrlType = ''; // URL-friendly type (e.g., 'retail', 'classic', 'classicera')
+let currentNamespace = ''; // API namespace prefix 'dynamic', 'dynamic-classic')
+let currentUrlType = ''; // URL-friendly type (retail', 'classic', 'classicera')
 let selectedButton = null; // Keep track of the visually selected filter button
 
 // --- DOM Elements ---
@@ -60,14 +60,12 @@ async function getRealms(token) {
     return null; // Indicate failure
   }
 
-  // Construct the full API namespace (e.g., dynamic-us, dynamic-classic-eu)
   const fullApiNamespace = `${currentNamespace}-${currentRegion}`;
-
   const url = new URL(
     `https://${currentRegion}.api.blizzard.com/data/wow/search/connected-realm`,
   );
   url.searchParams.append('namespace', fullApiNamespace);
-  url.searchParams.append('locale', currentLocale); // Locale affects names returned
+  url.searchParams.append('locale', currentLocale);
 
   try {
     const response = await fetch(url.toString(), {
@@ -79,7 +77,6 @@ async function getRealms(token) {
     });
 
     if (!response.ok) {
-      // Try to get more specific error from API response
       const errorBody = await response
         .json()
         .catch(() => ({ message: `HTTP Error! status: ${response.status}` }));
@@ -89,28 +86,25 @@ async function getRealms(token) {
 
     const realmData = await response.json();
 
-    // Filter and map realm data
     const realmDetails = realmData.results
-      .map((realm) => {
-        // Use English (en_US) as a reliable fallback for essential info like name
-        const primaryRealmInfo = realm.data.realms[0];
-        const name =
-          primaryRealmInfo.name[currentLocale] ||
-          primaryRealmInfo.name['en_US'];
+      .map((connectedRealmGroup) => {
+        // Focus on the primary realm within the connected group
+        const primaryRealmInfo = connectedRealmGroup.data.realms[0];
+        if (!primaryRealmInfo) return null;
 
-        // Officla Blizz slug
+        const name = getPrimaryName(primaryRealmInfo.name); // Standardized name extraction
         const slug = primaryRealmInfo.slug;
 
-        // Return null if essential data (like name) is missing to filter it out later
+        // Return null if essential data is missing to filter it out later
         if (!name || !slug) return null;
 
-        const statusType = realm.data.status.type; // UP/DOWN
+        const statusType = connectedRealmGroup.data.status.type;
         const statusLocalized =
-          realm.data.status.name[currentLocale] ||
-          realm.data.status.name['en_US'];
+          connectedRealmGroup.data.status.name[currentLocale] ||
+          connectedRealmGroup.data.status.name['en_US'];
         const populationLocalized =
-          realm.data.population.name[currentLocale] ||
-          realm.data.population.name['en_US'];
+          connectedRealmGroup.data.population.name[currentLocale] ||
+          connectedRealmGroup.data.population.name['en_US'];
         const typeLocalized =
           primaryRealmInfo.type.name[currentLocale] ||
           primaryRealmInfo.type.name['en_US'];
@@ -119,7 +113,7 @@ async function getRealms(token) {
           primaryRealmInfo.category['en_US'];
 
         return {
-          name: name,
+          name: name, // Use the standardized name
           slug: slug,
           status: statusType,
           statusLocalized: statusLocalized,
@@ -128,48 +122,49 @@ async function getRealms(token) {
           categoryLocalized: categoryLocalized,
         };
       })
+      // 1. Filter out any null entries from mapping (missing name/slug)
+      .filter((realm) => realm !== null)
+      // 2. Apply standardized name-based filters
       .filter(
         (realm) =>
-          realm !== null && // Filter out any null entries from mapping
-          !realm.name?.startsWith('US PS'),
-      ); // Filter out known dummy realms
+          !realm.name.startsWith('Test Realm') &&
+          !realm.name.startsWith('US') &&
+          !realm.name.includes('CWOW'),
+      );
 
-    // Sort realms alphabetically by name
+    // Sort realms alphabetically by the standardized name
     let sortedRealms = realmDetails.sort((a, b) =>
       a.name.localeCompare(b.name),
     );
 
+    console.log(
+      `[Realms Page] Found ${sortedRealms.length} valid realm groups after filtering.`,
+    );
     return sortedRealms;
   } catch (error) {
     console.error('Error fetching or processing realms:', error);
-    return null; // Indicate failure
+    return null;
   }
 }
-
-// --- UI Update Functions ---
 
 // Sets the visual state of the selected filter button and updates state
 function setChoseButton(buttonIndex, isUserClick) {
   const chosenButton = buttons[buttonIndex];
   if (!chosenButton) return; // Safety check
 
-  // Remove selection from the previously selected button
   if (selectedButton) {
     selectedButton.classList.remove('selected');
   }
 
-  // Add selection to the new button
   chosenButton.classList.add('selected');
-  selectedButton = chosenButton; // Update the reference
+  selectedButton = chosenButton;
 
-  // Update state based on the selected button
   currentNamespace = namespace[selectedButton.id];
-  currentUrlType = mapApiNamespaceToUrlType(currentNamespace); // Use the mapping function
+  currentUrlType = mapApiNamespaceToUrlType(currentNamespace);
 
-  // If triggered by a user click, save the choice and refresh the realm list
   if (isUserClick) {
     localStorage.setItem('selectedButtonId', selectedButton.id);
-    displayRealms(); // Refresh the list based on the new selection
+    displayRealms();
   }
 }
 
@@ -276,75 +271,60 @@ function displayRealmDetailsModal(realm) {
   }
 }
 
-// --- Initialization and Event Listeners ---
-
-// Loads saved selections from localStorage and sets initial state
 function configureSaveSelection() {
-  // Restore saved button selection or default
   let savedButtonId =
     localStorage.getItem('selectedButtonId') || 'retail-button'; // Default to retail
   const savedButton = document.querySelector(`#${savedButtonId}`);
   if (savedButton) {
     const savedIndex = Array.from(buttons).indexOf(savedButton);
     if (savedIndex !== -1) {
-      // Set initial state WITHOUT triggering refresh (isUserClick = false)
       setChoseButton(savedIndex, false);
     } else {
-      // Fallback if saved ID is invalid, use default
       setChoseButton(0, false);
     }
   } else {
-    // Fallback if element not found, use default
     setChoseButton(0, false);
   }
 
-  // Restore region or default
-  currentRegion = localStorage.getItem('selectedRegion') || regions[0]; // Default to first region
+  currentRegion = localStorage.getItem('selectedRegion') || regions[0];
   regionDropdown.value = currentRegion;
 
-  // Restore locale or default
-  currentLocale = localStorage.getItem('selectedLocale') || locales[0]; // Default to en_US
+  currentLocale = localStorage.getItem('selectedLocale') || locales[0];
   localeDropdown.value = currentLocale;
 
-  // Add event listeners to filter buttons
   buttons.forEach((button, index) => {
-    // Trigger state update AND refresh on click (isUserClick = true)
     button.addEventListener('click', () => setChoseButton(index, true));
   });
 
-  // Add event listeners to dropdowns
   regionDropdown.addEventListener('change', () => {
     currentRegion = regionDropdown.value;
     localStorage.setItem('selectedRegion', currentRegion);
-    displayRealms(); // Refresh list on change
+    displayRealms();
   });
 
   localeDropdown.addEventListener('change', () => {
     currentLocale = localeDropdown.value;
     localStorage.setItem('selectedLocale', currentLocale);
-    displayRealms(); // Refresh list on change
+    displayRealms();
   });
 }
 
-// Fetches token and realm data, then builds the UI
 async function displayRealms() {
-  realmGrid.innerHTML = '<p>Loading realms...</p>'; // Show loading state
+  realmGrid.innerHTML = '<p>Loading realms...</p>';
   realmCountEl.textContent = '...';
 
   const token = await getAccessToken();
   if (!token) {
     console.error('Failed to get access token. Cannot display realms.');
-    buildRealms(null); // Build with null to show error message
+    buildRealms(null);
     return;
   }
 
   const sortedRealms = await getRealms(token);
-  // buildRealms handles null/empty array internally now
   buildRealms(sortedRealms);
 }
 
-// --- Page Load Execution ---
 document.addEventListener('DOMContentLoaded', () => {
-  configureSaveSelection(); // Load settings and set initial state FIRST
-  displayRealms(); // THEN fetch and display data based on state
+  configureSaveSelection();
+  displayRealms();
 });

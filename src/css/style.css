@@ -1,77 +1,142 @@
 :root {
-  --header-footer-color: #ffdda9;
-  --accent-color: #000000d7;
   --nav-color: #444;
   --button-color: #473d3a;
   --secondary-color: #b25e39;
 
-  /* Text Color */
-  --primarytext-color: black;
-  --secondarytext-color: #f3f3f3;
-
-  --heading-font: 'Playfair Display', serif;
   --paragraph-font: 'PT Serif', serif;
-
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
 }
 
-* {
-  margin: 0;
+.home-main {
+  padding: 1rem 0;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
+.home-content-wrapper {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1rem;
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  flex-direction: column;
+  gap: 2.5rem;
 }
 
-/* --- Header & Footer --- */
-#main-header,
-#main-footer {
-  background-color: var(--header-footer-color);
-  color: var(--accent-color);
-  padding: var(--spacing-md) var(--spacing-lg);
+/* --- Welcome Section --- */
+.welcome-section {
+  background-color: #f9f5ef;
+  padding: 2rem;
+  border-radius: 8px;
+  border: 1px solid #e0d8cd;
   text-align: center;
-  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-#main-header {
-  border-bottom: 2px solid
-    color-mix(in srgb, var(--accent-color) 70%, transparent);
+.welcome-section h2 {
+  font-family: var(--paragraph-font);
+  color: #4a3c2b;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 2rem;
 }
 
-#main-footer {
-  margin-top: var(--spacing-xl);
-  border-top: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
-  font-size: 0.9rem;
+.welcome-section p {
+  font-family: var(--paragraph-font);
+  font-size: 1.1rem;
+  color: #555;
+  line-height: 1.7;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Style links within header/footer if needed (requires content) */
-#main-header a,
-#main-footer a {
-  color: var(--accent-color);
+.navigation-options {
+  text-align: center;
+}
+
+.navigation-options h3 {
+  font-family: var(--paragraph-font);
+  color: #5a4a3a;
+  margin-bottom: 2rem;
+  font-size: 1.6rem;
+}
+
+.nav-card-container {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.nav-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: 300px;
   text-decoration: none;
-  font-weight: bold;
+  color: inherit;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.07);
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+  text-align: center;
 }
 
-#main-header a:hover,
-#main-footer a:hover {
-  text-decoration: underline;
+.nav-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  border-color: #c0a88d;
 }
 
-h1 {
-  font-size: 3.5rem;
+.nav-card-icon {
+  margin-bottom: 1rem;
+  width: 80px;
+  height: 80px;
+}
+
+.nav-card-icon img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.nav-card h4 {
+  font-family: var(--paragraph-font);
+  margin: 0.5rem 0;
+  font-size: 1.3rem;
+  color: #6a5a4a;
+}
+
+.nav-card p {
+  font-family: var(--paragraph-font);
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .nav-card-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .nav-card {
+    width: 90%;
+    max-width: 350px;
+  }
+
+  .home-content-wrapper {
+    padding: 0 0.5rem;
+    margin: 1rem auto;
+  }
+
+  .welcome-section h2 {
+    font-size: 1.8rem;
+  }
+
+  .welcome-section p {
+    font-size: 1rem;
+  }
 }

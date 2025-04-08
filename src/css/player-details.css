@@ -1,250 +1,215 @@
 body {
-    font-family: 'PT Serif', serif;
-    /* Default body font */
-    margin: 0;
-    padding: 0;
-    background-color: #f8f8f7;
-    /* Slightly off-white background */
-    color: #333;
-    line-height: 1.6;
+  font-family: 'PT Serif', serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f8f7;
+  color: #333;
+  line-height: 1.6;
 }
 
 #main_body {
-    max-width: 1000px;
-    margin: 2rem auto;
-    padding: 2rem;
-    /* Increased padding */
-    background-color: #fff;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-    /* Softer shadow */
-    border-radius: 6px;
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
 }
 
-/* --- Header --- */
 #character-name-title {
-    text-align: center;
-    margin-bottom: 2rem;
-    /* More space below title */
-    color: #4a3c2b;
-    /* Darker brown */
-    font-family: 'Playfair Display', serif;
-    /* Title font */
-    font-size: 2.2rem;
-    /* Larger title */
-    font-weight: 600;
-    border-bottom: 1px solid #e0d8cd;
-    /* Subtle divider */
-    padding-bottom: 0.8rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #4a3c2b;
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  font-weight: 600;
+  border-bottom: 1px solid #e0d8cd;
+  padding-bottom: 0.8rem;
 }
 
 /* --- Grid Layout --- */
 .details-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    /* Single column on mobile */
-    gap: 2rem;
-    /* Increased gap */
-    margin-bottom: 2.5rem;
-    /* More space before AI section */
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
 }
 
-/* Two columns layout for larger screens */
 @media (min-width: 768px) {
-    .details-grid {
-        grid-template-columns: 220px 1fr;
-        align-items: start;
-        /* Align columns to the top */
-    }
+  .details-grid {
+    grid-template-columns: 220px 1fr;
+    align-items: start;
+  }
 
-    #detail-col-left {
-        position: sticky;
-        top: 20px;
-        /* Adjust position as needed */
-    }
+  #detail-col-left {
+    position: sticky;
+    top: 20px;
+  }
 }
 
 #player-avatar-container {
-    text-align: center;
-    border: 1px solid #eee;
-    background-color: #fdfdfd;
-    border-radius: 4px;
-    padding: 0.5rem;
-    margin-bottom: 1.5rem;
-    min-height: 214px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  text-align: center;
+  border: 1px solid #eee;
+  background-color: #fdfdfd;
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin-bottom: 1.5rem;
+  min-height: 214px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #player-avatar {
-    width: 52%;
-    max-width: 75%;
-    height: auto;
-    border-radius: 3px;
-    display: block;
-    margin-bottom: 0.5rem;
+  width: 52%;
+  max-width: 75%;
+  height: auto;
+  border-radius: 3px;
+  display: block;
+  margin-bottom: 0.5rem;
 }
 
 #avatar-loading,
 #avatar-unavailable {
-    color: #888;
-    font-style: italic;
-    font-size: 0.9rem;
+  color: #888;
+  font-style: italic;
+  font-size: 0.9rem;
 }
 
 .detail-item {
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .detail-item:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .detail-label {
-    font-weight: 600;
-    color: #5a4a3a;
-    display: block;
-    /* Ensures value is on next line */
-    margin-bottom: 0.3rem;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  font-weight: 600;
+  color: #5a4a3a;
+  display: block;
+  /* Ensures value is on next line */
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .detail-value {
-    color: #333;
-    font-size: 1rem;
-    word-wrap: break-word;
+  color: #333;
+  font-size: 1rem;
+  word-wrap: break-word;
 }
 
-/* --- Optional Items --- */
 .item-optional {
-    display: none;
-    /* Hide by default */
+  display: none;
 }
 
 .item-optional.visible {
-    display: block;
-    /* Show when .visible is added */
+  display: block;
 }
 
 /* Faction specific colors */
 .faction-alliance {
-    color: #004cff;
-    font-weight: bold;
+  color: #004cff;
+  font-weight: bold;
 }
 
 .faction-horde {
-    color: #ff0000;
-    font-weight: bold;
+  color: #ff0000;
+  font-weight: bold;
 }
 
 /* --- AI Summary Section --- */
 #ai-summary-container {
-    border-top: 2px solid #e0d8cd;
-    /* Match title border */
-    padding-top: 2rem;
-    margin-top: 2rem;
-    /* Ensure space even if grid gap changes */
+  border-top: 2px solid #e0d8cd;
+  padding-top: 2rem;
+  margin-top: 2rem;
 }
 
 #ai-summary-container h3 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: #4a3c2b;
-    /* Match main title color */
-    font-family: 'Playfair Display', serif;
-    font-size: 1.6rem;
-    font-weight: 600;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #4a3c2b;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 #ai-summary-content {
-    background-color: #faf8f5;
-    /* Very light beige background */
-    border: 1px solid #eee9e1;
-    padding: 1.5rem;
-    /* More padding */
-    margin-bottom: 1rem;
-    border-radius: 4px;
-    line-height: 1.7;
-    /* Slightly more line height for readability */
-    white-space: pre-wrap;
-    color: #444;
-    /* Slightly softer text color */
+  background-color: #faf8f5;
+  border: 1px solid #eee9e1;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  color: #444;
 }
 
 #ai-summary-text {
-    margin: 0;
-    font-size: 0.95rem;
+  margin: 0;
+  font-size: 0.95rem;
 }
 
 #ai-timestamp {
-    display: block;
-    text-align: right;
-    font-size: 0.8rem;
-    color: #998c7e;
-    /* Muted brown */
-    margin-top: 0.8rem;
-    font-style: italic;
+  display: block;
+  text-align: right;
+  font-size: 0.8rem;
+  color: #998c7e;
+  margin-top: 0.8rem;
+  font-style: italic;
 }
 
 #refresh-ai-summary {
-    display: block;
-    margin: 1rem auto 0 auto;
-    /* Center button with space above */
-    padding: 0.7rem 1.8rem;
-    /* Slightly larger button */
-    background-color: #8e765c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition:
-        background-color 0.2s ease,
-        box-shadow 0.2s ease;
-    font-family: 'PT Serif', serif;
-    /* Match body font */
+  display: block;
+  margin: 1rem auto 0 auto;
+  padding: 0.7rem 1.8rem;
+  background-color: #8e765c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+  font-family: 'PT Serif', serif;
 }
 
 #refresh-ai-summary:hover {
-    background-color: #7a6049;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #7a6049;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 #refresh-ai-summary:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    box-shadow: none;
+  background-color: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* --- Loading & Error Messages --- */
 #loading-message {
-    /* Keep existing styles or enhance */
-    font-size: 1.1rem;
-    color: #666;
+  font-size: 1.1rem;
+  color: #666;
 }
 
 .error-message {
-    /* Shared style for players-main and player-details */
-    color: #942a25;
-    /* Darker red */
-    background-color: #fdecea;
-    /* Lighter pink background */
-    border: 1px solid #f5c6c0;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-top: 1.5rem;
-    text-align: center;
-    font-size: 0.95rem;
+  color: #942a25;
+  background-color: #fdecea;
+  border: 1px solid #f5c6c0;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.95rem;
 }
 
 #detail-error-message {
-    /* Specific margin if needed */
-    margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }

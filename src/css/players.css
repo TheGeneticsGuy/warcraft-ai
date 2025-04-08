@@ -55,7 +55,6 @@ body {
 
 .filter-button.selected {
   background-color: #a88f72;
-  /* Example selected color */
   color: white;
   border-color: #8e765c;
   font-weight: bold;

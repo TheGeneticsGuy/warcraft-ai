@@ -1,9 +1,3 @@
-/* /css/realm-details.css */
-
-/* --- Google Fonts --- */
-/* Included via HTML link tag */
-
-/* --- CSS Variables (Custom Properties) --- */
 :root {
   --main-color: #ffdda9;
   --button-bg: #444;
@@ -30,11 +24,9 @@
   --spacing-xl: 2rem;
   --spacing-xxl: 3rem;
 
-  /* Transitions */
   --transition-speed: 0.3s;
 }
 
-/* --- Basic Reset & Base Styles --- */
 *,
 *::before,
 *::after {
@@ -63,44 +55,6 @@ body {
 main {
   flex-grow: 1;
   padding: var(--spacing-lg) 0;
-}
-
-/* --- Header & Footer --- */
-#main-header,
-#main-footer {
-  background-color: var(--main-color);
-  color: var(--accent-color);
-  padding: var(--spacing-md) var(--spacing-lg);
-  text-align: center;
-  flex-shrink: 0;
-}
-
-#main-header {
-  border-bottom: 2px solid
-    color-mix(in srgb, var(--accent-color) 70%, transparent);
-}
-
-#main-footer {
-  margin-top: var(--spacing-xl);
-  border-top: 2px solid color-mix(in srgb, var(--accent-color) 70%, transparent);
-  font-size: 0.9rem;
-}
-
-/* Style links within header/footer if needed (requires content) */
-#main-header a,
-#main-footer a {
-  color: var(--accent-color);
-  text-decoration: none;
-  font-weight: bold;
-}
-
-#main-header a:hover,
-#main-footer a:hover {
-  text-decoration: underline;
-}
-
-h1 {
-  font-size: 3.5rem;
 }
 
 /* --- Main Content Container --- */
@@ -178,7 +132,6 @@ h2 {
   /* Put label on its own line */
   margin-bottom: var(--spacing-xs);
   font-size: 1.1rem;
-  /* Make label slightly larger */
 }
 
 /* --- AI Summary Section --- */
@@ -221,7 +174,6 @@ h2 {
   color: var(--light-text);
   border: none;
   padding: var(--spacing-sm) var(--spacing-lg);
-  /* 8px 24px */
   font-size: 1rem;
   border-radius: 5px;
   cursor: pointer;
@@ -344,7 +296,6 @@ h2 {
 
 /* --- Responsive Design --- */
 
-/* Medium screens (Tablets) */
 @media (max-width: 900px) {
   .realm-detail {
     margin-left: var(--spacing-md);
@@ -381,32 +332,25 @@ h2 {
 
   #includedRealms {
     font-size: 1rem;
-    /* Adjust paragraph size */
   }
 }
 
-/* Small screens (Phones) */
 @media (max-width: 480px) {
   html {
     font-size: 14px;
-    /* Even smaller base */
   }
 
   body {
     line-height: 1.5;
-    /* Adjust line height slightly */
   }
 
   .realm-detail {
     margin: 0;
-    /* Remove horizontal margin */
     padding: var(--spacing-md);
     border-radius: 0;
-    /* Edge-to-edge feel */
     border-left: none;
     border-right: none;
     box-shadow: none;
-    /* Remove shadow on small screens */
   }
 
   #realmName {

@@ -32,21 +32,38 @@ function loadTemplate(path) {
 export async function loadHeaderFooter() {
   const headerTemplateFn = loadTemplate('/partials/header.html');
   const footerTemplateFn = loadTemplate('/partials/footer.html');
-  const headerHTML = document.querySelector('#main-header');
-  const footerHTML = document.querySelector('#main-footer');
-  // Ensure elements exist before rendering
-  if (headerHTML) {
-    renderWithTemplate(headerTemplateFn, headerHTML);
+  const headerElement = document.querySelector('#main-header');
+  const footerElement = document.querySelector('#main-footer');
+
+  if (headerElement) {
+    await renderWithTemplate(headerTemplateFn, headerElement);
+
+    try {
+      const currentPagePath = window.location.pathname;
+      const navLinks = headerElement.querySelectorAll('.main-nav a.nav-button');
+
+      navLinks.forEach((link) => {
+        link.classList.remove('active-nav');
+        const linkPath = link.pathname;
+
+        if (currentPagePath.startsWith(linkPath) && linkPath !== '/') {
+          link.classList.add('active-nav');
+        } else if (linkPath === '/' && currentPagePath === '/') {
+          link.classList.add('active-nav');
+        }
+      });
+    } catch (e) {
+      console.error('Error setting active nav state:', e);
+    }
   } else {
     console.warn('Header element (#main-header) not found.');
   }
-  if (footerHTML) {
-    renderWithTemplate(footerTemplateFn, footerHTML);
-  } else {
-    console.warn('Footer element (#main-footer) not found.');
+
+  // --- Render Footer ---
+  if (footerElement) {
+    await renderWithTemplate(footerTemplateFn, footerElement); // Use await here too for consistency
   }
 }
-
 /**
  * Maps the full API namespace string to a simplified URL-friendly type identifier.
  * Used by realms.js to create links.

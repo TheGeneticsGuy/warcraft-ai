@@ -3,17 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Warcraft AI Report</title>
+    <title>Warcraft AI Reporter</title>
 
     <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/header-footer.css" />
+
     <script src="js/main.js" type="module"></script>
 
-    <!-- Favicon -->
-    <link rel="icon" href="images/favicon.ico" />
+    <link rel="icon" href="/images/favicon.ico" />
 
     <meta
       name="description"
-      content="WDD 330 - Aaron Topping - Warcraft AI Roleplaying Report - Project Page"
+      content="Generate AI-assisted summaries and reports for World of Warcraft characters and realms."
     />
     <meta name="author" content="Aaron Topping" />
   </head>
@@ -21,14 +22,48 @@
   <body>
     <header class="divider" id="main-header"></header>
 
-    <main class="divider">
-      <p>Welcome to the first page of the deployment!!</p>
+    <main class="home-main">
+      <div class="home-content-wrapper">
+        <section class="welcome-section">
+          <h2>Welcome to the Warcraft AI Reporter!</h2>
+          <p>
+            Discover unique insights into the World of Warcraft. This site uses
+            AI to generate brief, flavorful historical summaries for WoW realms
+            or engaging character chronicles for players based on available
+            Armory data. Explore realm status and history, or get a unique
+            perspective on your favorite characters (or your own!).
+          </p>
+        </section>
+
+        <section class="navigation-options">
+          <h3>Choose Your Path:</h3>
+          <div class="nav-card-container">
+            <a href="/players/" class="nav-card players-card">
+              <div class="nav-card-icon">
+                <img src="/images/player-icon.png" alt="Player Icon" />
+              </div>
+              <h4>Player Chronicle</h4>
+              <p>
+                Search for a character and generate an AI summary of their
+                journey.
+              </p>
+            </a>
+            <a href="/realms/" class="nav-card realms-card">
+              <div class="nav-card-icon">
+                <img src="/images/realm-icon.png" alt="Realm Icon" />
+              </div>
+              <h4>Realm Report</h4>
+              <p>
+                Check realm status or generate an AI history of a specific
+                realm.
+              </p>
+            </a>
+          </div>
+        </section>
+      </div>
     </main>
 
-    <script>
-      console.log('index.html loaded for URL:', window.location.pathname);
-    </script>
+    <div class="divider-footer"></div>
+    <footer id="main-footer"></footer>
   </body>
-
-  <footer id="main-footer"></footer>
 </html>

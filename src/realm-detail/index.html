@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Realm Details</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <!-- Adjust path as needed -->
+    <link rel="stylesheet" href="/css/realms.css" />
+    <!-- Add if you need specific styles -->
+    <script src="/js/realm-detail.js" type="module"></script>
+  </head>
+
+  <body>
+    <header id="main-header"></header>
+    <main>
+      <section class="realm-detail">
+        <h2 id="realmName">Loading...</h2>
+        <div id="realm-core-details">
+          <p id="realmRegion"></p>
+          <p id="realmStatus"></p>
+          <p id="realmPopulation"></p>
+          <p id="realmType"></p>
+          <p id="realmCategory"></p>
+          <p id="realmTimezone"></p>
+          <p id="includedRealms"></p>
+          <!-- Removed realmSlug display, less user-facing -->
+        </div>
+
+        <!-- AI Summary Section -->
+        <section id="ai-summary-container" style="display: none">
+          <!-- Hidden initially -->
+          <h3>Realm Summary (AI Generated)</h3>
+          <div id="ai-summary-text">Loading summary...</div>
+          <div
+            id="ai-timestamp"
+            style="font-size: 0.8em; color: #666; margin-top: 5px"
+          ></div>
+          <button id="refresh-ai-summary" style="margin-top: 10px">
+            Refresh Summary
+          </button>
+          <p style="font-size: 0.7em; color: #888; margin-top: 5px">
+            Note: AI summaries may occasionally contain inaccuracies.
+          </p>
+        </section>
+      </section>
+    </main>
+    <footer id="main-footer"></footer>
+  </body>
+</html>

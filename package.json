@@ -19,6 +19,9 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
     "node-fetch": "^3.3.2"
   }
 }

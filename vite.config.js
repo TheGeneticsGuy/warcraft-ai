@@ -2,13 +2,15 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  root: resolve(__dirname, 'src'), // Set src/ as the root for dev server
+  root: resolve(__dirname, 'src'),
   build: {
-    outDir: resolve(__dirname, 'dist'), // Output to root-level dist
+    outDir: resolve(__dirname, 'dist'),
+    emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'src/index.html'), // Homepage entry
-        realms: resolve(__dirname, 'src/realms/index.html'), // Realms page entry
+        main: resolve(__dirname, 'src/index.html'), // Your home page
+        realms: resolve(__dirname, 'src/realms/index.html'), // Your existing realms page
+        realmDetail: resolve(__dirname, 'src/realm-detail/index.html'), // New detail page
       },
     },
   },

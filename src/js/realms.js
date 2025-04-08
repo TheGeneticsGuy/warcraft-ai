@@ -1,303 +1,351 @@
 import { getAccessToken } from './blizzAPI.js';
+import { mapApiNamespaceToUrlType } from './utils.mjs';
 
-// Locales, reguions, and namespaces
+// --- Global Variables ---
 const locales = [
-  'en_US',
-  'ko_KR',
-  'fr_FR',
-  'de_DE',
-  'zh_CN',
-  'es_ES',
-  'zh_TW',
-  'es_MX',
-  'ru_RU',
-  'pt_BR',
-  'it_IT',
+    'en_US',
+    'ko_KR',
+    'fr_FR',
+    'de_DE',
+    'zh_CN',
+    'es_ES',
+    'zh_TW',
+    'es_MX',
+    'ru_RU',
+    'pt_BR',
+    'it_IT',
 ];
 const regions = ['us', 'eu', 'kr', 'tw'];
+// Maps button IDs to API namespace prefixes
 const namespace = {
-  'retail-button': 'dynamic',
-  'classic-button': 'dynamic-classic',
-  'classicEra-button': 'dynamic-classic1x',
-}; // Button IDs matched to the namespace of the API for Realms.
+    'retail-button': 'dynamic',
+    'classic-button': 'dynamic-classic', // Assumes this is for Cata/Wrath/etc...
+    'classicEra-button': 'dynamic-classic1x',
+};
 
 let currentRegion = '';
 let currentLocale = '';
-let currentNamespace = '';
+let currentNamespace = ''; // API namespace prefix (e.g., 'dynamic', 'dynamic-classic')
+let currentUrlType = ''; // URL-friendly type (e.g., 'retail', 'classic', 'classicera')
+let selectedButton = null; // Keep track of the visually selected filter button
 
-// HAMBURGER BUTTON LOGIC
+// --- DOM Elements ---
 const icons = document.querySelectorAll('.icon-menu');
 const nav = document.querySelector('.navigation');
+const buttons = document.querySelectorAll('.filter-button'); // Realm type filter buttons
+const regionDropdown = document.querySelector('#region-select');
+const localeDropdown = document.querySelector('#locale-select');
+const realmGrid = document.querySelector('#lower_main_grid');
+const realmCountEl = document.querySelector('#num-realms');
+const realmDetailsModal = document.querySelector('#realm-details'); // For mobile modal
 
+// --- Hamburger Menu Logic ---
 icons.forEach((hamburger) => {
-  hamburger.addEventListener('click', () => {
-    nav.classList.toggle('open');
-    hamburger.classList.toggle('open');
-  });
+    hamburger.addEventListener('click', () => {
+        nav.classList.toggle('open');
+        hamburger.classList.toggle('open');
+    });
 });
 
-// Get the realms based on the filtered parameters...
-async function getRealms(token) {
-  // Manually constructing URL with query parameters as per Blizz documentation.
-  const url = new URL(
-    `https://${currentRegion}.api.blizzard.com/data/wow/search/connected-realm `,
-  );
-  url.searchParams.append('namespace', `${currentNamespace}-${currentRegion}`);
-  url.searchParams.append('locale', currentLocale);
+// --- API Data Fetching ---
 
-  try {
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+// Fetches realm list from Blizzard API based on current filters
+async function getRealms(token) {
+    if (!currentRegion || !currentNamespace || !currentLocale) {
+        console.error('Missing required parameters for API call:', {
+            currentRegion,
+            currentNamespace,
+            currentLocale,
+        });
+        return null; // Indicate failure
+    }
+
+    // Construct the full API namespace (e.g., dynamic-us, dynamic-classic-eu)
+    const fullApiNamespace = `${currentNamespace}-${currentRegion}`;
+
+    const url = new URL(
+        `https://${currentRegion}.api.blizzard.com/data/wow/search/connected-realm`,
+    );
+    url.searchParams.append('namespace', fullApiNamespace);
+    url.searchParams.append('locale', currentLocale); // Locale affects names returned
+
+    try {
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            // Try to get more specific error from API response
+            const errorBody = await response
+                .json()
+                .catch(() => ({ message: `HTTP Error! status: ${response.status}` }));
+            console.error('API Error Response:', errorBody);
+            throw new Error(errorBody.message || `Error! status: ${response.status}`);
+        }
+
+        const realmData = await response.json();
+
+        // Filter and map realm data
+        const realmDetails = realmData.results
+            .map((realm) => {
+                // Use English (en_US) as a reliable fallback for essential info like name
+                const primaryRealmInfo = realm.data.realms[0];
+                const name =
+                    primaryRealmInfo.name[currentLocale] ||
+                    primaryRealmInfo.name['en_US'];
+
+                // Officla Blizz slug
+                const slug = primaryRealmInfo.slug;
+
+                // Return null if essential data (like name) is missing to filter it out later
+                if (!name || !slug) return null;
+
+                const statusType = realm.data.status.type; // UP/DOWN
+                const statusLocalized =
+                    realm.data.status.name[currentLocale] ||
+                    realm.data.status.name['en_US'];
+                const populationLocalized =
+                    realm.data.population.name[currentLocale] ||
+                    realm.data.population.name['en_US'];
+                const typeLocalized =
+                    primaryRealmInfo.type.name[currentLocale] ||
+                    primaryRealmInfo.type.name['en_US'];
+                const categoryLocalized =
+                    primaryRealmInfo.category[currentLocale] ||
+                    primaryRealmInfo.category['en_US'];
+
+                return {
+                    name: name,
+                    slug: slug,
+                    status: statusType,
+                    statusLocalized: statusLocalized,
+                    popLocalized: populationLocalized,
+                    typeLocalized: typeLocalized,
+                    categoryLocalized: categoryLocalized,
+                };
+            })
+            .filter(
+                (realm) =>
+                    realm !== null && // Filter out any null entries from mapping
+                    !realm.name?.startsWith('US PS'),
+            ); // Filter out known dummy realms
+
+        // Sort realms alphabetically by name
+        let sortedRealms = realmDetails.sort((a, b) =>
+            a.name.localeCompare(b.name),
+        );
+
+        return sortedRealms;
+    } catch (error) {
+        console.error('Error fetching or processing realms:', error);
+        return null; // Indicate failure
+    }
+}
+
+// --- UI Update Functions ---
+
+// Sets the visual state of the selected filter button and updates state
+function setChoseButton(buttonIndex, isUserClick) {
+    const chosenButton = buttons[buttonIndex];
+    if (!chosenButton) return; // Safety check
+
+    // Remove selection from the previously selected button
+    if (selectedButton) {
+        selectedButton.classList.remove('selected');
+    }
+
+    // Add selection to the new button
+    chosenButton.classList.add('selected');
+    selectedButton = chosenButton; // Update the reference
+
+    // Update state based on the selected button
+    currentNamespace = namespace[selectedButton.id];
+    currentUrlType = mapApiNamespaceToUrlType(currentNamespace); // Use the mapping function
+
+    // If triggered by a user click, save the choice and refresh the realm list
+    if (isUserClick) {
+        localStorage.setItem('selectedButtonId', selectedButton.id);
+        displayRealms(); // Refresh the list based on the new selection
+    }
+}
+
+// Builds the HTML grid for the realms
+function buildRealms(sortedRealms) {
+    realmGrid.innerHTML = ''; // Clear previous grid content
+
+    if (!sortedRealms || sortedRealms.length === 0) {
+        realmGrid.innerHTML =
+            '<p class="error-message">No realms found matching your criteria, or an error occurred.</p>';
+        realmCountEl.textContent = '0';
+        return;
+    }
+
+    // Add Header Row
+    const headerItem = document.createElement('div');
+    headerItem.classList.add('realm-item', 'grid-header');
+    headerItem.innerHTML = `
+      <div class="realm-name">REALM</div>
+      <div class="realm-status">STATUS</div>
+      <div class="realm-population">POPULATION</div>
+    `;
+    realmGrid.appendChild(headerItem);
+
+    // Add Data Rows
+    sortedRealms.forEach((realm) => {
+        const realmItem = document.createElement('div');
+        realmItem.classList.add('realm-item');
+
+        // Create name column as a LINK with query parameters
+        const nameElement = document.createElement('a');
+        nameElement.classList.add('realm-name', 'realm-link');
+        nameElement.textContent = realm.name;
+        nameElement.href = `/realm-detail/?region=${currentRegion}&urlType=${currentUrlType}&realmSlug=${realm.slug}`;
+
+        // Create status column
+        const statusElement = document.createElement('div');
+        statusElement.classList.add('realm-status');
+        statusElement.textContent = realm.statusLocalized;
+        statusElement.classList.toggle('status-up', realm.status === 'UP');
+        statusElement.classList.toggle('status-down', realm.status === 'DOWN');
+
+        // Create population column
+        const populationElement = document.createElement('div');
+        populationElement.classList.add('realm-population');
+        populationElement.textContent = realm.popLocalized;
+
+        // Append columns to realm item
+        realmItem.appendChild(nameElement);
+        realmItem.appendChild(statusElement);
+        realmItem.appendChild(populationElement);
+
+        realmItem.addEventListener('click', (event) => {
+            if (event.target === nameElement) {
+                return; // Let the link handle navigation
+            }
+            // Existing modal logic remains intact
+            // if (window.innerWidth <= 768) {
+            //   displayRealmDetailsModal(realm);
+            // }
+        });
+
+        realmGrid.appendChild(realmItem);
     });
 
-    if (!response.ok) {
-      throw new Error(`Error! status: ${response.status}`);
-    }
-
-    // To get full details, from the server, need more info need to fetch each connected realm
-    const realmData = await response.json();
-
-    // Now, let's build a table to sort the data
-    // NOTE -- This falls back to English if there is no localized name as apparently not all realms have localized name options, notably the anniversary realms
-    const realmDetails = realmData.results
-      .filter(
-        (realm) =>
-          !realm.data.realms[0].name[currentLocale]?.startsWith('US PS') && // Want to filter out any dummy realms
-          !realm.data.realms[0].name[locales[0]]?.startsWith('US PS'),
-      )
-      .map((realm) => ({
-        name:
-          realm.data.realms[0].name[currentLocale] ||
-          realm.data.realms[0].name[locales[0]],
-        status: realm.data.status.type, // need non-localized type for coloring Red or Green
-        statusLocalized:
-          realm.data.status.name[currentLocale] ||
-          realm.data.status.name[locales[0]],
-        popLocalized:
-          realm.data.population.name[currentLocale] ||
-          realm.data.population.name[locales[0]], // Don't actually need non-localized for population since no special coloring
-
-        // EXTRA COLUMNS I COULD ADD - BUT WILL PROBABLY NOT FOR NOW - I will still store them
-        typeLocalized:
-          realm.data.realms[0].type.name[currentLocale] ||
-          realm.data.realms[0].type.name[locales[0]], // Also don't need non-localized for type
-        categoryLocalized:
-          realm.data.realms[0].category[currentLocale] ||
-          realm.data.realms[0].category[locales[0]], // Also don't need non-localized for type
-      }));
-
-    // Sort realms alphabetically by name
-    let sortedRealms = realmDetails.sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
-
-    // // Create a formatted table for console output
-    // console.table(sortedRealms);
-    return sortedRealms;
-  } catch (error) {
-    console.error('Error fetching realms:', error);
-  }
+    realmCountEl.textContent = sortedRealms.length;
 }
 
-// LOAD SETTINGS AND CONFIGURE BUTTON STATES
-// Keep track of the currently selected button
-let selectedButton = null;
-const buttons = document.querySelectorAll('.filter-button'); // Sets all the class buttons to an array
-
-// So the animation remains permanent of the selected realm type filter button
-function setChoseButton(ind, isClick) {
-  const chosenButton = buttons[ind];
-
-  // If a button is already selected, remove the selected class
-  if (selectedButton) {
-    selectedButton.classList.remove('selected');
-  }
-
-  // Add the selected class to the newly clicked button
-  chosenButton.classList.add('selected');
-
-  // Update the selectedButton reference
-  selectedButton = chosenButton;
-
-  if (isClick) {
-    localStorage.setItem('selectedButtonId', chosenButton.id);
-    currentNamespace = namespace[chosenButton.id];
-    displayRealms();
-  }
-}
-
-// This will hold all of the local storage configuration at the start
-function configureSaveSelection() {
-  let savedButtonId = localStorage.getItem('selectedButtonId');
-  const regionDropdown = document.querySelector('#region-select');
-  const localeDropdown = document.querySelector('#locale-select');
-
-  buttons.forEach((button, index) => {
-    button.addEventListener('click', () => setChoseButton(index, true));
-  });
-
-  if (!savedButtonId) {
-    savedButtonId = 'retail-button';
-  }
-
-  // Retail, Cata, or Classic Era Buttons
-  if (savedButtonId) {
-    const savedButton = document.querySelector(`#${savedButtonId}`);
-    if (savedButton) {
-      const savedIndex = Array.from(buttons).indexOf(savedButton);
-      currentNamespace = namespace[savedButtonId];
-      setChoseButton(savedIndex, false);
-    }
-  }
-
-  // Restore previous selections from localStorage
-  currentRegion = localStorage.getItem('selectedRegion');
-  currentLocale = localStorage.getItem('selectedLocale');
-
-  if (currentRegion) {
-    regionDropdown.value = currentRegion;
-  } else {
-    currentRegion = regions[0];
-    regionDropdown.value = regions[0];
-  }
-
-  if (currentLocale) {
-    localeDropdown.value = currentLocale;
-  } else {
-    currentLocale = locales[0];
-    localeDropdown.value = locales[0];
-  }
-
-  // Add event listeners to store selections in localStorage
-  regionDropdown.addEventListener('change', () => {
-    const selectedRegion = regionDropdown.value;
-    localStorage.setItem('selectedRegion', selectedRegion);
-    currentRegion = selectedRegion;
-    displayRealms();
-  });
-
-  localeDropdown.addEventListener('change', () => {
-    const selectedLocale = localeDropdown.value;
-    localStorage.setItem('selectedLocale', selectedLocale);
-    currentLocale = selectedLocale;
-    displayRealms();
-  });
-}
-
-// Main function to build the grid
-// 3 columns - Name, Status, Population
-function buildRealms(sortedRealms) {
-  const realmGrid = document.querySelector('#lower_main_grid');
-  realmGrid.innerHTML = ''; // Reset the grid
-
-  for (let i = -1; i < sortedRealms.length; i++) {
-    let realm = null;
-
-    if (i === -1) {
-      realm = {
-        name: 'REALM',
-        statusLocalized: 'STATUS',
-        status: 'UP',
-        popLocalized: 'POPULATION',
-      };
-    } else {
-      realm = sortedRealms[i];
-    }
-    // Create the realm item container
-    const realmItem = document.createElement('div');
-    realmItem.classList.add('realm-item');
-    if (i === -1) {
-      realmItem.classList.add('grid-header');
-    }
-
-    // Create name column
-    const nameElement = document.createElement('div');
-    nameElement.classList.add('realm-name');
-    nameElement.textContent = realm.name;
-
-    // Create status column
-    const statusElement = document.createElement('div');
-    statusElement.classList.add('realm-status');
-    statusElement.textContent = realm.statusLocalized;
-
-    // Set status color based on status
-    if (realm.status === 'UP') {
-      statusElement.classList.add('status-up');
-    } else if (realm.status === 'DOWN') {
-      statusElement.classList.add('status-down');
-    }
-
-    // Create population column
-    const populationElement = document.createElement('div');
-    populationElement.classList.add('realm-population');
-    populationElement.textContent = realm.popLocalized;
-
-    // Append columns to realm item
-    realmItem.appendChild(nameElement);
-    realmItem.appendChild(statusElement);
-    realmItem.appendChild(populationElement);
-
-    // Adding event listener for modal
-    if (i > -1) {
-      realmItem.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-          displayRealmDetailsModal(realm); // Only run modal on smaller screen
-        }
-      });
-    }
-
-    // Append realm item to grid
-    realmGrid.appendChild(realmItem);
-  }
-
-  document.querySelector('#num-realms').textContent = sortedRealms.length;
-}
-
-// Core load function
-async function displayRealms() {
-  const token = await getAccessToken(); // Your existing token retrieval method
-  const sortedRealms = await getRealms(token);
-  buildRealms(sortedRealms);
-}
-
-// MODAL LOGIC
-
-const realmDetails = document.querySelector('#realm-details');
-
+// Displays the modal (primarily for smaller screens)
 function displayRealmDetailsModal(realm) {
-  let colorClass = 'status-up';
+    if (!realmDetailsModal) return; // Safety check if element doesn't exist
 
-  if (realm.status === 'DOWN') {
-    colorClass = 'status-down';
-  }
-  // Reset when displaying
-  realmDetails.innerHTML = '';
-  realmDetails.innerHTML = `
-        <button id="closeModal">❌</button>
+    const colorClass = realm.status === 'UP' ? 'status-up' : 'status-down';
+
+    realmDetailsModal.innerHTML = `
+        <button id="closeModal" aria-label="Close modal">❌</button>
         <h2>${realm.name}</h2>
         <div id="modal-divider"></div>
         <div id="modal-wrapper">
             <div id="modal-left">
                 <p>STATUS:</p>
                 <p>POPULATION:</p>
+                <!-- Optionally add more details here -->
+                <p>TYPE:</p>
+                <p>CATEGORY:</p>
             </div>
             <div id="modal-right">
-                <p class=${colorClass}>${realm.statusLocalized}</p>
+                <p class="${colorClass}">${realm.statusLocalized}</p>
                 <p>${realm.popLocalized}</p>
+                <!-- Corresponding values -->
+                <p>${realm.typeLocalized}</p>
+                <p>${realm.categoryLocalized}</p>
             </div>
         </div>
     `;
 
-  realmDetails.showModal();
-  const closeButton = document.querySelector('#closeModal');
-  closeButton.addEventListener('click', () => {
-    realmDetails.close();
-  });
+    realmDetailsModal.showModal();
+
+    // Add listener to the new close button within the modal
+    const closeButton = realmDetailsModal.querySelector('#closeModal');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            realmDetailsModal.close();
+        });
+    }
 }
 
-document.addEventListener('DOMContentLoaded', configureSaveSelection);
-document.addEventListener('DOMContentLoaded', displayRealms);
+// --- Initialization and Event Listeners ---
+
+// Loads saved selections from localStorage and sets initial state
+function configureSaveSelection() {
+    // Restore saved button selection or default
+    let savedButtonId =
+        localStorage.getItem('selectedButtonId') || 'retail-button'; // Default to retail
+    const savedButton = document.querySelector(`#${savedButtonId}`);
+    if (savedButton) {
+        const savedIndex = Array.from(buttons).indexOf(savedButton);
+        if (savedIndex !== -1) {
+            // Set initial state WITHOUT triggering refresh (isUserClick = false)
+            setChoseButton(savedIndex, false);
+        } else {
+            // Fallback if saved ID is invalid, use default
+            setChoseButton(0, false);
+        }
+    } else {
+        // Fallback if element not found, use default
+        setChoseButton(0, false);
+    }
+
+    // Restore region or default
+    currentRegion = localStorage.getItem('selectedRegion') || regions[0]; // Default to first region
+    regionDropdown.value = currentRegion;
+
+    // Restore locale or default
+    currentLocale = localStorage.getItem('selectedLocale') || locales[0]; // Default to en_US
+    localeDropdown.value = currentLocale;
+
+    // Add event listeners to filter buttons
+    buttons.forEach((button, index) => {
+        // Trigger state update AND refresh on click (isUserClick = true)
+        button.addEventListener('click', () => setChoseButton(index, true));
+    });
+
+    // Add event listeners to dropdowns
+    regionDropdown.addEventListener('change', () => {
+        currentRegion = regionDropdown.value;
+        localStorage.setItem('selectedRegion', currentRegion);
+        displayRealms(); // Refresh list on change
+    });
+
+    localeDropdown.addEventListener('change', () => {
+        currentLocale = localeDropdown.value;
+        localStorage.setItem('selectedLocale', currentLocale);
+        displayRealms(); // Refresh list on change
+    });
+}
+
+// Fetches token and realm data, then builds the UI
+async function displayRealms() {
+    realmGrid.innerHTML = '<p>Loading realms...</p>'; // Show loading state
+    realmCountEl.textContent = '...';
+
+    const token = await getAccessToken();
+    if (!token) {
+        console.error('Failed to get access token. Cannot display realms.');
+        buildRealms(null); // Build with null to show error message
+        return;
+    }
+
+    const sortedRealms = await getRealms(token);
+    // buildRealms handles null/empty array internally now
+    buildRealms(sortedRealms);
+}
+
+// --- Page Load Execution ---
+document.addEventListener('DOMContentLoaded', () => {
+    configureSaveSelection(); // Load settings and set initial state FIRST
+    displayRealms(); // THEN fetch and display data based on state
+});

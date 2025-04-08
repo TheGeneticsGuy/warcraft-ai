@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Realm Details</title>
+    <script
+      type="module"
+      crossorigin
+      src="/assets/realmDetail-CiVPLpde.js"
+    ></script>
+    <link rel="modulepreload" crossorigin href="/assets/utils-BR9Q9_H-.js" />
+    <link rel="modulepreload" crossorigin href="/assets/blizzAPI-ZIwjDhYC.js" />
+    <link rel="stylesheet" crossorigin href="/assets/style-CrYBktwj.css" />
+  </head>
+
+  <body>
+    <header class="divider" id="main-header"></header>
+
+    <main class="container">
+      <h2 id="realm-detail-name">Loading Realm...</h2>
+      <div id="realm-detail-info">
+        <p>
+          <strong>Region:</strong> <span id="realm-detail-region">...</span>
+        </p>
+        <p><strong>Type:</strong> <span id="realm-detail-type">...</span></p>
+        <p>
+          <strong>Status:</strong>
+          <span id="realm-detail-status" class="realm-status">...</span>
+        </p>
+        <p>
+          <strong>Population:</strong>
+          <span id="realm-detail-population">...</span>
+        </p>
+        <p>
+          <strong>Category:</strong> <span id="realm-detail-category">...</span>
+        </p>
+      </div>
+      <div
+        id="realm-detail-error"
+        class="error-message"
+        style="display: none"
+      ></div>
+    </main>
+
+    <footer id="main-footer"></footer>
+  </body>
+</html>

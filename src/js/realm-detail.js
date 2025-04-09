@@ -261,7 +261,7 @@ async function fetchAiSummaryDirectly(realmName, region) {
   // const bestRaidGuild = 'https://raider.io/liberation-of-undermine/realm-rankings/world/all/mythic'
 
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-  const prompt = `Adopt the persona of a knowledgeable Azerothian chronicler. Provide a brief (3-6 sentences) yet evocative historical summary of the World of Warcraft realm "${realmName}" in the "${region}" region. Be explicit in including the month and/or year if that is known, when the realm was established. It is ok to add additional flair to the warcraft events around that time, but be sure to mention the real-world time period. Weave in details about its origin, type (PvP/PvE/RP), and any widely known historical events, legendary guilds (like Liquid, Echo, Method, etc., if applicable and known for this realm), or renowned figures connected to it, drawing from established Warcraft history and community knowledge (similar to information found on sites like Raider.io or Esportsbets). Maintain factual accuracy where possible, but present the information with a touch of narrative flair appropriate for Warcraft lore. If verifiable history or notable tales are scarce for this realm, acknowledge this humbly. Avoid pure speculation.`;
+  const prompt = `Adopt the persona of a knowledgeable Azerothian chronicler. Provide a brief (3-6 sentences) yet evocative historical summary of the World of Warcraft realm "${realmName}" in the "${region}" region. Be explicit in including the month and/or year if that is known, but do not speculate when the realm was established. Give a general timeframe, but don't say the specific month unless that is known and not speculated. It is ok to add additional flair to the warcraft events around that time, but be sure to mention the real-world time period. Weave in details about its origin, be accurate about the type of realm (PvP/PvE/RP), and any widely known historical events, legendary guilds (like Liquid, Echo, Method, etc., if applicable and known for this realm), or renowned figures connected to it, drawing from established Warcraft history and community knowledge (similar to information found on sites like Raider.io or Esportsbets). Only mention the famous guilds if they are absolutely connected to this realm. Maintain factual accuracy where possible, but present the information with a touch of narrative flair appropriate for Warcraft lore. If verifiable history or notable tales are scarce for this realm, acknowledge this humbly. Avoid pure speculation.`;
 
   try {
     const response = await fetch(API_URL, {
@@ -279,7 +279,7 @@ async function fetchAiSummaryDirectly(realmName, region) {
       console.error('Gemini API Error Response:', errorBody);
       throw new Error(
         errorBody.error?.message ||
-          `Gemini API request failed: ${response.status}`,
+        `Gemini API request failed: ${response.status}`,
       );
     }
 

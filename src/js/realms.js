@@ -57,7 +57,9 @@ async function getRealms(token) {
       currentNamespace,
       currentLocale,
     });
-    return null; // Indicate failure
+    realmGrid.innerHTML = '<p class="error-message">Error: Missing region, game type, or locale selection.</p>';
+    realmCountEl.textContent = '0';
+    return null;
   }
 
   const fullApiNamespace = `${currentNamespace}-${currentRegion}`;
@@ -77,72 +79,85 @@ async function getRealms(token) {
     });
 
     if (!response.ok) {
-      const errorBody = await response
-        .json()
-        .catch(() => ({ message: `HTTP Error! status: ${response.status}` }));
-      console.error('API Error Response:', errorBody);
-      throw new Error(errorBody.message || `Error! status: ${response.status}`);
+      let errorBody;
+      try {
+        errorBody = await response.json();
+        console.error(`API Error (${response.status}):`, errorBody);
+        // Handle specific errors if needed (e.g., 404 might mean bad namespace/region combo)
+        if (response.status === 404) {
+          throw new Error(`No data found for ${currentRegion}/${currentNamespace}. Check filters. Status: ${response.status}`);
+        }
+        throw new Error(errorBody.detail || errorBody.error_description || `HTTP Error! Status: ${response.status}`);
+      } catch (jsonError) {
+        console.error('Failed to parse error response:', jsonError);
+        throw new Error(`HTTP Error! Status: ${response.status}`);
+      }
     }
 
     const realmData = await response.json();
 
-    const realmDetails = realmData.results
-      .map((connectedRealmGroup) => {
-        // Focus on the primary realm within the connected group
-        const primaryRealmInfo = connectedRealmGroup.data.realms[0];
-        if (!primaryRealmInfo) return null;
+    const allIndividualRealms = [];
 
-        const name = getPrimaryName(primaryRealmInfo.name); // Standardized name extraction
-        const slug = primaryRealmInfo.slug;
+    realmData.results.forEach((connectedRealmGroup) => {
+      const groupStatusType = connectedRealmGroup.data.status.type;
+      const groupStatusLocalized =
+        connectedRealmGroup.data.status.name[currentLocale] ||
+        connectedRealmGroup.data.status.name['en_US'] ||
+        connectedRealmGroup.data.status.type;
+      const groupPopulationLocalized =
+        connectedRealmGroup.data.population.name[currentLocale] ||
+        connectedRealmGroup.data.population.name['en_US'] ||
+        'N/A';
 
-        // Return null if essential data is missing to filter it out later
-        if (!name || !slug) return null;
+      // Iterate through *each realm* within this connected group
+      connectedRealmGroup.data.realms.forEach((realmInfo) => {
+        const name = getPrimaryName(realmInfo.name);
+        const slug = realmInfo.slug;
 
-        const statusType = connectedRealmGroup.data.status.type;
-        const statusLocalized =
-          connectedRealmGroup.data.status.name[currentLocale] ||
-          connectedRealmGroup.data.status.name['en_US'];
-        const populationLocalized =
-          connectedRealmGroup.data.population.name[currentLocale] ||
-          connectedRealmGroup.data.population.name['en_US'];
+        if (!name || !slug) {
+          console.warn('Skipping realm due to missing name or slug:', realmInfo);
+          return;
+        }
+
         const typeLocalized =
-          primaryRealmInfo.type.name[currentLocale] ||
-          primaryRealmInfo.type.name['en_US'];
+          (realmInfo.type && realmInfo.type.name && (realmInfo.type.name[currentLocale] || realmInfo.type.name['en_US'])) ||
+          'N/A';
         const categoryLocalized =
-          primaryRealmInfo.category[currentLocale] ||
-          primaryRealmInfo.category['en_US'];
+          (realmInfo.category && (realmInfo.category[currentLocale] || realmInfo.category['en_US'])) ||
+          'N/A';
 
-        return {
-          name: name, // Use the standardized name
+        allIndividualRealms.push({
+          name: name,
           slug: slug,
-          status: statusType,
-          statusLocalized: statusLocalized,
-          popLocalized: populationLocalized,
+          status: groupStatusType,
+          statusLocalized: groupStatusLocalized,
+          popLocalized: groupPopulationLocalized,
           typeLocalized: typeLocalized,
           categoryLocalized: categoryLocalized,
-        };
-      })
-      // 1. Filter out any null entries from mapping (missing name/slug)
-      .filter((realm) => realm !== null)
-      // 2. Apply standardized name-based filters
-      .filter(
-        (realm) =>
-          !realm.name.startsWith('Test Realm') &&
-          !realm.name.startsWith('US') &&
-          !realm.name.includes('CWOW'),
-      );
+        });
+      });
+    });
 
-    // Sort realms alphabetically by the standardized name
-    let sortedRealms = realmDetails.sort((a, b) =>
+    // Filter the flat list of individual realms
+    const filteredRealms = allIndividualRealms.filter(
+      (realm) =>
+        realm.name &&
+        !realm.name.toLowerCase().startsWith('test realm') &&
+        !realm.name.toLowerCase().startsWith('ptr') &&
+        !realm.name.startsWith('US') &&
+        !realm.name.includes('CWOW')
+    );
+
+    let sortedRealms = filteredRealms.sort((a, b) =>
       a.name.localeCompare(b.name),
     );
 
-    console.log(
-      `[Realms Page] Found ${sortedRealms.length} valid realm groups after filtering.`,
-    );
     return sortedRealms;
+
   } catch (error) {
     console.error('Error fetching or processing realms:', error);
+    realmGrid.innerHTML = `<p class="error-message">Error loading realms: ${error.message}. Please try again or check filters.</p>`;
+    realmCountEl.textContent = '0';
     return null;
   }
 }

@@ -1,4 +1,3 @@
-// src/js/players-main.js
 import {
   loadHeaderFooter,
   mapUrlTypeToApiNamespace,
@@ -26,7 +25,6 @@ let currentUrlType = DEFAULT_URL_TYPE;
 let currentRegion = DEFAULT_REGION;
 let blizzardToken = null; // Store the token for reuse
 
-// --- Helper: Simplified Fetch with Timeout for Pre-check ---
 async function fetchWithTimeout(
   resource,
   options = {},
@@ -46,12 +44,11 @@ async function fetchWithTimeout(
     if (error.name === 'AbortError') {
       throw new Error(`API check timed out after ${timeout / 1000} seconds.`);
     }
-    throw error; // Re-throw other network errors
+    throw error;
   }
 }
 
 // --- Functions ---
-
 function showError(message) {
   errorMessageDiv.textContent = message;
   errorMessageDiv.style.display = 'block';
@@ -83,27 +80,22 @@ function normalizeCharacterName(name) {
 // Fetches the list of realms for the specified region and game version
 async function fetchRealmListForDropdown(region, urlType) {
   if (!blizzardToken) {
-    console.error('Cannot fetch realm list: Missing access token.');
     throw new Error('Authentication token is missing.');
   }
   if (!region || !urlType) {
-    console.error('Cannot fetch realm list: Missing region or urlType.');
     return [];
   }
 
-  const apiNamespacePrefix = mapUrlTypeToApiNamespace(urlType, 'dynamic');
+  const apiNamespacePrefix = mapUrlTypeToApiNamespace(urlType, 'dynamic'); // 'dynamic' namespace is for realm index
   if (!apiNamespacePrefix) {
     console.error(
-      `Could not determine namespace prefix for urlType: ${urlType}`,
+      `[Players Page] Could not determine namespace prefix for urlType: ${urlType}`,
     );
     throw new Error(`Unsupported game version type: ${urlType}`);
   }
 
   const fullApiNamespace = `${apiNamespacePrefix}-${region}`;
-  // Use the /realm/index endpoint, explicitly requesting en_US for dropdown names
   const apiUrl = `https://${region}.api.blizzard.com/data/wow/realm/index?namespace=${fullApiNamespace}&locale=en_US`;
-
-  console.log(`Fetching realms from: ${apiUrl}`);
 
   try {
     const response = await fetch(apiUrl, {
@@ -111,27 +103,43 @@ async function fetchRealmListForDropdown(region, urlType) {
     });
 
     if (!response.ok) {
-      const errorBody = await response
-        .json()
-        .catch(() => ({ message: `HTTP Error ${response.status}` }));
-      console.error('API Error fetching realm index:', errorBody);
-      throw new Error(
-        errorBody.title || `Failed to fetch realms (${response.status})`,
-      );
+      let errorBody;
+      try {
+        errorBody = await response.json();
+        console.error(`[Players Page] API Error (${response.status}) fetching realm index:`, errorBody);
+        // Handle specific errors if needed (e.g., 404 might mean bad namespace/region combo)
+        if (response.status === 404) {
+          throw new Error(`No realms found for ${region}/${urlType} (${fullApiNamespace}). Check filters. Status: ${response.status}`);
+        }
+        throw new Error(errorBody.detail || errorBody.title || `Failed to fetch realms. Status: ${response.status}`);
+      } catch (jsonError) {
+        console.error('[Players Page] Failed to parse error response:', jsonError);
+        throw new Error(`Failed to fetch realms. Status: ${response.status}`);
+      }
     }
     const data = await response.json();
 
-    if (!data.realms || data.realms.length === 0) {
-      console.warn('No realms found in API response for:', fullApiNamespace);
+    if (!data || !data.realms) {
+      console.warn('[Players Page] Invalid or empty response structure received from realm index API for:', fullApiNamespace);
+      return [];
+    }
+    if (data.realms.length === 0) {
+      console.warn('[Players Page] API returned 0 realms for:', fullApiNamespace);
       return [];
     }
 
     const realms = data.realms
       .map((realm) => {
+        // Ensure realm and realm.name exist before accessing properties
+        if (!realm || !realm.name || !realm.slug) {
+          console.warn('[Players Page] Skipping realm due to missing data:', realm);
+          return null;
+        }
         const name = getPrimaryName(realm.name);
         const slug = realm.slug;
 
-        if (!name || !slug) {
+        if (!name) {
+          console.warn(`[Players Page] Skipping realm after getPrimaryName resulted in null/empty name for original: ${realm.name}`);
           return null;
         }
 
@@ -140,18 +148,17 @@ async function fetchRealmListForDropdown(region, urlType) {
       .filter((realm) => realm !== null)
       .filter(
         (realm) =>
-          !realm.name.startsWith('Test Realm') &&
+          !realm.name.toLowerCase().startsWith('test realm') &&
+          !realm.name.toLowerCase().startsWith('ptr') &&
           !realm.name.startsWith('US') &&
-          !realm.name.includes('CWOW'),
+          !realm.name.includes('CWOW')
       )
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
 
-    console.log(
-      `[Players Page] Found ${realms.length} valid individual realms after filtering.`,
-    );
     return realms;
+
   } catch (error) {
-    console.error('Error in fetchRealmListForDropdown:', error);
+    console.error('[Players Page] Error in fetchRealmListForDropdown:', error);
     throw error;
   }
 }
@@ -186,7 +193,6 @@ async function triggerRealmListUpdate() {
 
   try {
     if (!blizzardToken) {
-      console.log('Fetching initial access token for realm list...');
       blizzardToken = await getAccessToken();
       if (!blizzardToken) {
         throw new Error('Authentication failed. Cannot load realms.');
@@ -209,7 +215,6 @@ async function triggerRealmListUpdate() {
 }
 
 // --- Event Listeners ---
-
 buttons.forEach((button) => {
   button.addEventListener('click', () => selectGameVersionButton(button));
 });
@@ -221,7 +226,6 @@ regionDropdown.addEventListener('change', () => {
 
 // --- Modified Search Button Click Handler ---
 searchButton.addEventListener('click', async () => {
-  // Make async
   clearError();
 
   const region = currentRegion;
@@ -252,14 +256,12 @@ searchButton.addEventListener('click', async () => {
   try {
     // Ensure token is available
     if (!blizzardToken) {
-      console.log('Fetching access token for pre-check...');
       blizzardToken = await getAccessToken();
     }
     if (!blizzardToken) {
       throw new Error('Authentication failed. Cannot verify player.');
     }
 
-    // Determine the correct profile namespace
     const profileNamespacePrefix = mapUrlTypeToApiNamespace(urlType, 'profile');
     if (!profileNamespacePrefix) {
       throw new Error(
@@ -270,7 +272,6 @@ searchButton.addEventListener('click', async () => {
 
     // Construct the basic profile URL
     const checkUrl = `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${characterName}?namespace=${fullProfileNamespace}&locale=en_US`;
-    console.log(`Pre-checking player existence: ${checkUrl}`);
 
     const checkResponse = await fetchWithTimeout(checkUrl, {
       method: 'GET',
@@ -281,31 +282,27 @@ searchButton.addEventListener('click', async () => {
     if (checkResponse.ok) {
       // Status 200-299
       characterExists = true;
-      console.log('Player found during pre-check.');
     } else if (checkResponse.status === 404) {
       characterExists = false;
-      console.log('Player not found during pre-check (404).');
       showError(
         `Player "${rawCharacterName}" on realm "${realmDropdown.options[realmDropdown.selectedIndex].text}" (${region.toUpperCase()}) not found. Please check the spelling, realm, and region.`,
       );
     } else {
-      // Handle other API errors during pre-check
       let errorDetail = `API Error ${checkResponse.status}`;
       try {
         const errorBody = await checkResponse.json();
         errorDetail = errorBody.detail || errorBody.title || errorDetail;
       } catch (e) {
-        /* Ignore parsing error if body isn't JSON */
       }
       throw new Error(`Verification failed: ${errorDetail}`);
     }
   } catch (error) {
     console.error('Error during player pre-check:', error);
     showError(`Error verifying player: ${error.message}`);
-    characterExists = false; // Assume not found if check fails
+    characterExists = false;
   } finally {
     searchButton.disabled = false; // Re-enable button
-    searchButton.textContent = 'Search Player'; // Restore text
+    searchButton.textContent = 'Search Player';
   }
 
   // --- Proceed to Redirect ONLY if Character Exists ---
@@ -314,13 +311,11 @@ searchButton.addEventListener('click', async () => {
     params.append('region', region);
     params.append('urlType', urlType);
     params.append('realmSlug', realmSlug);
-    params.append('characterName', characterName); // Use normalized name
+    params.append('characterName', characterName);
 
     const detailPageUrl = `/player-details/?${params.toString()}`;
-    console.log(`Redirecting to: ${detailPageUrl}`);
     window.location.href = detailPageUrl;
   }
-  // If character doesn't exist, the error message is already shown, and we don't redirect.
 });
 
 // --- Initialization ---

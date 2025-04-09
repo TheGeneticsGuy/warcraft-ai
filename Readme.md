@@ -1,7 +1,7 @@
 # Warcraft AI Reporter
 
 [![Warcraft AI Reporter](https://i.imgur.com/hp9StIT.jpeg)](https://warcraft-ai-report.netlify.app/)
-*Click the image to navigate to the live deployed website on Netlify!*
+_Click the image to navigate to the live deployed website on Netlify!_
 
 ## Class Details
 
@@ -17,7 +17,7 @@ Discover unique insights into the Players and Realms surrounding World of Warcra
 
 # Meta-Tags enabled:
 
-*Follow the demo link below and **CLICK** "Parse Meta Data" to generate*
+_Follow the demo link below and **CLICK** "Parse Meta Data" to generate_
 
 [View Meta Tag demo](https://metatags.io/?url=https%3A%2F%2Fwarcraft-ai-report.netlify.app%2F)
 
@@ -67,9 +67,8 @@ const data = await response.json(); // Gemini's AI Generated response
 
 **NOTE: Parameter - `generationConfig`**
 
-* temperature - References the level of creativity you want Gemini to have (Scale is 0 to 2.0)
+- temperature - References the level of creativity you want Gemini to have (Scale is 0 to 2.0)
 
-* maxOutputTokens - Limits the number of tokens Gemini will return as a response. This is a protection to prevent the expenditure of your limited tokens, ESPECIALLY if you move to a paid version. Warning, if you request a multiple pargraph response from the AI, but your token limit is set too low, it will cut off the response. Either be specific in that you want response to be within the token limit range, or make it reasonably large that it doesn't hit the limit.
-
+- maxOutputTokens - Limits the number of tokens Gemini will return as a response. This is a protection to prevent the expenditure of your limited tokens, ESPECIALLY if you move to a paid version. Warning, if you request a multiple pargraph response from the AI, but your token limit is set too low, it will cut off the response. Either be specific in that you want response to be within the token limit range, or make it reasonably large that it doesn't hit the limit.
 
 [Click here to view the Warcraft AI Reporter Project!](https://warcraft-ai-report.netlify.app/)

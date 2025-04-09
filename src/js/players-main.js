@@ -106,25 +106,43 @@ async function fetchRealmListForDropdown(region, urlType) {
       let errorBody;
       try {
         errorBody = await response.json();
-        console.error(`[Players Page] API Error (${response.status}) fetching realm index:`, errorBody);
+        console.error(
+          `[Players Page] API Error (${response.status}) fetching realm index:`,
+          errorBody,
+        );
         // Handle specific errors if needed (e.g., 404 might mean bad namespace/region combo)
         if (response.status === 404) {
-          throw new Error(`No realms found for ${region}/${urlType} (${fullApiNamespace}). Check filters. Status: ${response.status}`);
+          throw new Error(
+            `No realms found for ${region}/${urlType} (${fullApiNamespace}). Check filters. Status: ${response.status}`,
+          );
         }
-        throw new Error(errorBody.detail || errorBody.title || `Failed to fetch realms. Status: ${response.status}`);
+        throw new Error(
+          errorBody.detail ||
+          errorBody.title ||
+          `Failed to fetch realms. Status: ${response.status}`,
+        );
       } catch (jsonError) {
-        console.error('[Players Page] Failed to parse error response:', jsonError);
+        console.error(
+          '[Players Page] Failed to parse error response:',
+          jsonError,
+        );
         throw new Error(`Failed to fetch realms. Status: ${response.status}`);
       }
     }
     const data = await response.json();
 
     if (!data || !data.realms) {
-      console.warn('[Players Page] Invalid or empty response structure received from realm index API for:', fullApiNamespace);
+      console.warn(
+        '[Players Page] Invalid or empty response structure received from realm index API for:',
+        fullApiNamespace,
+      );
       return [];
     }
     if (data.realms.length === 0) {
-      console.warn('[Players Page] API returned 0 realms for:', fullApiNamespace);
+      console.warn(
+        '[Players Page] API returned 0 realms for:',
+        fullApiNamespace,
+      );
       return [];
     }
 
@@ -132,14 +150,19 @@ async function fetchRealmListForDropdown(region, urlType) {
       .map((realm) => {
         // Ensure realm and realm.name exist before accessing properties
         if (!realm || !realm.name || !realm.slug) {
-          console.warn('[Players Page] Skipping realm due to missing data:', realm);
+          console.warn(
+            '[Players Page] Skipping realm due to missing data:',
+            realm,
+          );
           return null;
         }
         const name = getPrimaryName(realm.name);
         const slug = realm.slug;
 
         if (!name) {
-          console.warn(`[Players Page] Skipping realm after getPrimaryName resulted in null/empty name for original: ${realm.name}`);
+          console.warn(
+            `[Players Page] Skipping realm after getPrimaryName resulted in null/empty name for original: ${realm.name}`,
+          );
           return null;
         }
 
@@ -151,12 +174,11 @@ async function fetchRealmListForDropdown(region, urlType) {
           !realm.name.toLowerCase().startsWith('test realm') &&
           !realm.name.toLowerCase().startsWith('ptr') &&
           !realm.name.startsWith('US') &&
-          !realm.name.includes('CWOW')
+          !realm.name.includes('CWOW'),
       )
       .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
 
     return realms;
-
   } catch (error) {
     console.error('[Players Page] Error in fetchRealmListForDropdown:', error);
     throw error;
@@ -293,8 +315,8 @@ searchButton.addEventListener('click', async () => {
         const errorBody = await checkResponse.json();
         errorDetail = errorBody.detail || errorBody.title || errorDetail;
       } catch (e) {
+        throw new Error(`Verification failed: ${errorDetail}`);
       }
-      throw new Error(`Verification failed: ${errorDetail}`);
     }
   } catch (error) {
     console.error('Error during player pre-check:', error);

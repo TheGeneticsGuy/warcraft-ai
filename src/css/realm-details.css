@@ -149,6 +149,7 @@ h2 {
   line-height: 1.7;
   text-align: left;
   color: #444;
+  white-space: pre-wrap;
 }
 
 #ai-timestamp {

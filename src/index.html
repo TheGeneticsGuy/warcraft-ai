@@ -1,87 +1,96 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Warcraft AI Reporter</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Warcraft AI Reporter</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/header-footer.css" />
 
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/header-footer.css" />
+    <script src="js/main.js" type="module"></script>
 
-  <script src="js/main.js" type="module"></script>
+    <link rel="icon" href="/images/favicon.ico" />
 
-  <link rel="icon" href="/images/favicon.ico" />
+    <meta
+      name="description"
+      content="Generate AI-assisted summaries and reports for World of Warcraft characters and realms."
+    />
+    <meta name="author" content="Aaron Topping" />
 
-  <meta name="description"
-    content="Generate AI-assisted summaries and reports for World of Warcraft characters and realms." />
-  <meta name="author" content="Aaron Topping" />
+    <!-- META properties Facebook -->
+    <meta property="og:title" content="Warcraft AI Report" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://warcraft-ai-report.netlify.app/" />
+    <meta property="og:image" content="/images/link-image.webp" />
+    <meta
+      property="og:description"
+      content="WDD 330 Aaron Topping - Final Project - Warcraft AI Report"
+    />
 
-  <!-- META properties Facebook -->
-  <meta property="og:title" content="Warcraft AI Report" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://warcraft-ai-report.netlify.app/" />
-  <meta property="og:image" content="/images/link-image.webp" />
-  <meta property="og:description" content="WDD 330 Aaron Topping - Final Project - Warcraft AI Report" />
+    <!-- Twitter(X) Card tags -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Warcraft AI Report" />
+    <meta
+      name="twitter:description"
+      content="WDD 330 Aaron Topping - Final Project - Warcraft AI Report"
+    />
+    <meta name="twitter:image" content="/images/link-image.webp" />
+    <meta
+      name="twitter:url"
+      content="https://warcraft-ai-report.netlify.app/"
+    />
+  </head>
 
-  <!-- Twitter(X) Card tags -->
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Warcraft AI Report" />
-  <meta name="twitter:description" content="WDD 330 Aaron Topping - Final Project - Warcraft AI Report" />
-  <meta name="twitter:image" content="/images/link-image.webp" />
-  <meta name="twitter:url" content="https://warcraft-ai-report.netlify.app/" />
-</head>
+  <body>
+    <header class="divider" id="main-header"></header>
 
-<body>
-  <header class="divider" id="main-header"></header>
+    <main class="home-main">
+      <div class="home-content-wrapper">
+        <section class="welcome-section">
+          <h2>Welcome to the Warcraft AI Reporter!</h2>
+          <p>
+            Discover unique insights into the Players and Realms surrounding
+            World of Warcraft. This site uses AI to generate brief, fun,
+            flavorful and historical summaries for WoW realms or engaging
+            character chronicles for players based on some of the available
+            Armory data. In additiona to being able to explore the current realm
+            status of all available realms, have fun reading an AI generated
+            summary and history of your favorite realms. Get a unique
+            perspective on all of your own alts, or those of your friends and
+            guildies! Have fun exploring!
+          </p>
+        </section>
 
-  <main class="home-main">
-    <div class="home-content-wrapper">
-      <section class="welcome-section">
-        <h2>Welcome to the Warcraft AI Reporter!</h2>
-        <p>
-          Discover unique insights into the Players and Realms surrounding
-          World of Warcraft. This site uses AI to generate brief, fun,
-          flavorful and historical summaries for WoW realms or engaging
-          character chronicles for players based on some of the available
-          Armory data. In additiona to being able to explore the current realm
-          status of all available realms, have fun reading an AI generated
-          summary and history of your favorite realms. Get a unique
-          perspective on all of your own alts, or those of your friends and
-          guildies! Have fun exploring!
-        </p>
-      </section>
+        <section class="navigation-options">
+          <h3>Choose Your Path:</h3>
+          <div class="nav-card-container">
+            <a href="/players/" class="nav-card players-card">
+              <div class="nav-card-icon">
+                <img src="/images/player-icon.webp" alt="Player Icon" />
+              </div>
+              <h4>Player Chronicle</h4>
+              <p>
+                Search for a character and generate an AI summary of their
+                journey.
+              </p>
+            </a>
+            <a href="/realms/" class="nav-card realms-card">
+              <div class="nav-card-icon">
+                <img src="/images/realm-icon.webp" alt="Realm Icon" />
+              </div>
+              <h4>Realm Report</h4>
+              <p>
+                Check realm status or generate an AI history of a specific
+                realm.
+              </p>
+            </a>
+          </div>
+        </section>
+      </div>
+    </main>
 
-      <section class="navigation-options">
-        <h3>Choose Your Path:</h3>
-        <div class="nav-card-container">
-          <a href="/players/" class="nav-card players-card">
-            <div class="nav-card-icon">
-              <img src="/images/player-icon.webp" alt="Player Icon" />
-            </div>
-            <h4>Player Chronicle</h4>
-            <p>
-              Search for a character and generate an AI summary of their
-              journey.
-            </p>
-          </a>
-          <a href="/realms/" class="nav-card realms-card">
-            <div class="nav-card-icon">
-              <img src="/images/realm-icon.webp" alt="Realm Icon" />
-            </div>
-            <h4>Realm Report</h4>
-            <p>
-              Check realm status or generate an AI history of a specific
-              realm.
-            </p>
-          </a>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <div class="divider-footer"></div>
-  <footer id="main-footer"></footer>
-</body>
-
+    <div class="divider-footer"></div>
+    <footer id="main-footer"></footer>
+  </body>
 </html>

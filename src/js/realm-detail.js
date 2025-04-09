@@ -246,22 +246,46 @@ function renderBlizzardDetails(realm, regionParam) {
 //     }
 // }
 
-async function fetchAiSummaryDirectly(realmName, region) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Access Vite env var
+async function fetchAiSummaryDirectly(realmDetails) {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
-    console.error('API key is not set. Cannot fetch AI summary directly.');
     return 'AI summary configuration error (missing key).';
   }
 
-  // For expaneded AI use one day.
-  // const bestGuilds = 'https://www.esportsbets.com/wow/best-guilds/'
-  // const bestdps = 'https://raider.io/mythic-plus-character-rankings/season-tww-2/world/all/dps'
-  // const besthealer = 'https://raider.io/mythic-plus-character-rankings/season-tww-2/world/all/healer'
-  // const bestRaidGuild = 'https://raider.io/liberation-of-undermine/realm-rankings/world/all/mythic'
+  const realmName = realmDetails.name || 'this realm';
+  const region = realmDetails.region || 'its region';
+  const realmType = realmDetails.type || 'unknown type';
+  const category = realmDetails.category || 'standard';
 
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-  const prompt = `Adopt the persona of a knowledgeable Azerothian chronicler. Provide a brief (3-6 sentences) yet evocative historical summary of the World of Warcraft realm "${realmName}" in the "${region}" region. Be explicit in including the month and/or year if that is known, but do not speculate when the realm was established. Give a general timeframe, but don't say the specific month unless that is known and not speculated. It is ok to add additional flair to the warcraft events around that time, but be sure to mention the real-world time period. Weave in details about its origin, be accurate about the type of realm (PvP/PvE/RP), and any widely known historical events, legendary guilds (like Liquid, Echo, Method, etc., if applicable and known for this realm), or renowned figures connected to it, drawing from established Warcraft history and community knowledge (similar to information found on sites like Raider.io or Esportsbets). Only mention the famous guilds if they are absolutely connected to this realm. Maintain factual accuracy where possible, but present the information with a touch of narrative flair appropriate for Warcraft lore. If verifiable history or notable tales are scarce for this realm, acknowledge this humbly. Avoid pure speculation.`;
+
+  const prompt = `
+Adopt the persona of a knowledgeable and eloquent Azerothian chronicler or historian, recounting tales of Azeroth, of stories of great adventurers... Do not reference anything indicating the digital nature of the game or the world. Do not present this in the first person or name yourself. Preset the summary of the specified realm below in a factual, but stylyzed role-playing demeanor.
+Your task is to generate a detailed historical summary (approximately 2-3 paragraphs) for the World of Warcraft realm specified below.
+
+**Realm Details Provided:**
+*   **Realm Name:** ${realmName}
+*   **Region:** ${region}
+*   **Realm Type:** ${realmType} (${category})  // e.g., Normal (PvE), PvP, RP (Roleplaying)
+
+if the realm type is normal, then identify it as a PVE realm, not a "normal" realm.
+
+**Instructions for the Chronicler:**
+
+1.  **Focus:** Craft a narrative history centered *specifically* on the "${realmName}" (${region}) realm.
+2.  **Origin:** Discuss its origins. Based on your training data, mention the *general time period* or *expansion context* when "${realmName}" likely launched (e.g., "one of the original launch realms," "established during the original Vanilla Era, or during the Burning Crusade era," or WOTLK, or when the Cataclysm happened and so on. Do NOT state a specific month or year unless it is verifiable public knowledge for *this specific realm*. Avoid guessing or speculating on exact dates.** It is ok to be in the ballpark, but try to use events or seasons, like fall, spring, or "during the original Vanilla Classic game" or "One of the original first servers" and so on.
+3.  **Realm Type Influence:** Explain how its designation as a **"${realmType}"** shapes its culture in the world of Azeroth
+4.  **Notable History & Community:** Weave in any *widely known and verifiable* historical events, significant server-first achievements, renowned *long-standing guilds specifically associated with "${realmName}" or its connected group*, or famous player figures *if* your training data strongly supports their connection to *this specific realm*.
+5.  **Famous Guilds - IMPORTANT CAVEAT:** Mention globally famous competitive guilds (like Liquid, Echo, Method, etc.) **ONLY IF** your training data strongly and accurately indicates they had a significant, well-documented historical presence, origin, or major achievement *directly tied to "${realmName}" or its specific connected realms*. **If there is no such direct, verifiable connection, DO NOT mention these famous guilds at all, not even to state they aren't present.** Focus on the realm's own history.
+6.  **Tone & Style:** Write with narrative flair, evocative language, and the authority of an Azerothian historian. Maintain factual accuracy based on the provided details and your general knowledge base.
+7.  **Handling Scarcity:** If significant historical details or notable events specific to "${realmName}" are scarce in your training data, acknowledge this humbly (e.g., "While specific chronicles are sparse...") rather than fabricating information. Prioritize accuracy and relevance to the provided realm details.
+8. **Length:** Aim for 2-3 informative paragraphs. Either amount is appropriate. As long is it is informative and useful. You do not have to include every single aspect mentioned here, if it seems like maybe it is not relevant. Use your judgement on what to share based on this prompt. Weave these details (or lack thereof, omitting gracefully if details are sparse or insignificant) into a compelling narrative fitting the Warcraft universe. End with a sentence that sparks curiosity about the server's past exploits or future adventures. Avoid clichés like "gather 'round'"
+
+Begin your chronicle now for "${realmName}" (${region}).
+`;
+
+  console.log(`[AI Prompt] ${prompt}`);
 
   try {
     const response = await fetch(API_URL, {
@@ -269,6 +293,7 @@ async function fetchAiSummaryDirectly(realmName, region) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
       }),
     });
 
@@ -285,40 +310,69 @@ async function fetchAiSummaryDirectly(realmName, region) {
 
     const data = await response.json();
 
-    // Basic check for response structure
-    if (
+    if (data.promptFeedback?.blockReason) {
+      console.warn(
+        'AI content blocked:',
+        data.promptFeedback.blockReason,
+        data.promptFeedback.safetyRatings,
+      );
+      return `Summary generation was blocked. Reason: ${data.promptFeedback.blockReason}. Please try again or adjust settings if possible.`;
+    } else if (
       data.candidates &&
       data.candidates.length > 0 &&
       data.candidates[0].content &&
       data.candidates[0].content.parts &&
-      data.candidates[0].content.parts.length > 0
+      data.candidates[0].content.parts.length > 0 &&
+      data.candidates[0].content.parts[0].text
     ) {
-      return data.candidates[0].content.parts[0].text;
-    } else if (data.promptFeedback?.blockReason) {
-      console.warn('AI content blocked:', data.promptFeedback.blockReason);
-      return `Summary generation was blocked due to: ${data.promptFeedback.blockReason}.`;
+      if (
+        data.candidates[0].finishReason &&
+        data.candidates[0].finishReason !== 'STOP'
+      ) {
+        console.warn(
+          `AI generation finished with reason: ${data.candidates[0].finishReason}. Output may be incomplete or problematic.`,
+        );
+      }
+      return data.candidates[0].content.parts[0].text.trim();
     } else {
-      console.warn('Unexpected AI response structure:', data);
-      return 'Could not parse AI summary from the response.';
+      console.warn('Unexpected AI response structure or empty content:', data);
+      return 'Could not parse a valid AI summary from the response. The structure might be unexpected or the content empty.';
     }
   } catch (error) {
     console.error('Error fetching AI summary directly:', error);
-    return `Error generating summary: ${error.message}`;
+    return `An error occurred while generating the realm summary: ${error.message}. Please try again later.`;
   }
 }
 
 async function displayAiSummary(
-  realmName,
-  region,
+  realmDetails, // The whole realm object
   realmSlug,
   forceRefresh = false,
 ) {
-  if (!aiSummaryContainer || !realmName || !region || !realmSlug) return; // Don't run if elements or data missing
+  const realmName = realmDetails?.name;
+  const region = realmDetails?.region;
+
+  if (!aiSummaryContainer || !realmName || !region || !realmSlug) {
+    console.warn('displayAiSummary called with incomplete data. Aborting.', {
+      realmName,
+      region,
+      realmSlug,
+    });
+    if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';
+    return;
+  }
 
   const cacheKey = `${AI_CACHE_PREFIX}${region}-${realmSlug}`;
   const cachedData = localStorage.getItem(cacheKey);
   let summary = '';
   let timestamp = null;
+
+  if (forceRefresh || !cachedData) {
+    aiSummaryText.textContent = 'Generating realm summary...';
+    aiTimestamp.textContent = '';
+    if (refreshAiButton) refreshAiButton.disabled = true;
+    if (aiSummaryContainer) aiSummaryContainer.style.display = 'block';
+  }
 
   if (cachedData && !forceRefresh) {
     try {
@@ -327,27 +381,27 @@ async function displayAiSummary(
       timestamp = parsed.timestamp;
     } catch (e) {
       console.error('Failed to parse cached AI summary', e);
-      localStorage.removeItem(cacheKey); // Clear invalid cache item
+      localStorage.removeItem(cacheKey);
+      summary = '';
+      timestamp = null;
     }
   }
 
   if (!summary || forceRefresh) {
     aiSummaryText.textContent = 'Generating realm summary...';
     aiTimestamp.textContent = '';
-    refreshAiButton.disabled = true; // Disable button while generating
+    if (refreshAiButton) refreshAiButton.disabled = true;
 
-    // SECURE BACKEND which I will implement eventually
-    // summary = await fetchAiSummaryFromBackend(realmName, region);
-
-    summary = await fetchAiSummaryDirectly(realmName, region);
+    summary = await fetchAiSummaryDirectly(realmDetails);
 
     timestamp = new Date().toISOString();
     localStorage.setItem(cacheKey, JSON.stringify({ summary, timestamp }));
 
-    refreshAiButton.disabled = false; // Re-enable button
+    if (refreshAiButton) refreshAiButton.disabled = false;
   }
 
-  aiSummaryText.textContent = summary || 'No summary available.'; // Display fetched/cached summary
+  aiSummaryText.textContent =
+    summary || 'No summary could be generated or retrieved.';
   if (timestamp) {
     aiTimestamp.textContent = `Summary generated: ${new Date(
       timestamp,
@@ -355,71 +409,50 @@ async function displayAiSummary(
   } else {
     aiTimestamp.textContent = '';
   }
+  if (aiSummaryContainer) aiSummaryContainer.style.display = 'block';
 }
 
 // --- Initialization ---
-
 async function initializePage() {
-  await loadHeaderFooter(); // Load header/footer first
+  await loadHeaderFooter();
 
-  const region = getParam('region');
+  const regionParam = getParam('region');
   const urlType = getParam('urlType');
   const realmSlug = getParam('realmSlug');
 
-  if (!region || !urlType || !realmSlug) {
-    realmDetailSection.innerHTML =
-      '<p class="error-message">Error: Missing realm details in URL.</p>';
-    if (aiSummaryContainer) aiSummaryContainer.style.display = 'none'; // Hide AI if params missing
-    return;
-  }
-
-  if (aiSummaryContainer) aiSummaryContainer.style.display = 'none'; // Hide AI initially
+  if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';
 
   const token = await getAccessToken();
-  if (!token) {
-    realmDetailSection.innerHTML =
-      '<p class="error-message">Error: Could not authenticate with Blizzard API.</p>';
-    if (aiSummaryContainer) aiSummaryContainer.style.display = 'none'; // Hide AI if auth fails
-    return;
-  }
 
   const apiNamespacePrefix = mapUrlTypeToApiNamespace(urlType);
   const realmDetails = await fetchRealmDetailsApi(
-    region,
+    regionParam,
     apiNamespacePrefix,
     realmSlug,
     token,
   );
 
-  renderBlizzardDetails(realmDetails, region, urlType, realmSlug); // Pass original params too for context if API fails partially
+  renderBlizzardDetails(realmDetails, regionParam);
 
   // --- AI Summary Logic ---
-  // Only proceed if we successfully got realm details (specifically name and region)
   if (
     realmDetails &&
     !realmDetails.error &&
     realmDetails.name &&
-    realmDetails.region
+    realmDetails.region &&
+    realmSlug
   ) {
-    displayAiSummary(realmDetails.name, realmDetails.region, realmSlug); // Initial load (cached or new)
+    displayAiSummary(realmDetails, realmSlug); // Initial load
 
-    // Add listener for the refresh button
     if (refreshAiButton) {
       refreshAiButton.addEventListener('click', () => {
-        displayAiSummary(
-          realmDetails.name,
-          realmDetails.region,
-          realmSlug,
-          true,
-        ); // Force refresh
+        displayAiSummary(realmDetails, realmSlug, true);
       });
     }
   } else {
-    // Ensure AI section is hidden if realm details failed or were incomplete
     if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';
-    console.log('Skipping AI summary due to missing realm details.');
+    console.log('Skipping AI summary due to missing/error in realm details.');
   }
 }
 
-// Run initialization when the DOM is ready
 document.addEventListener('DOMContentLoaded', initializePage);

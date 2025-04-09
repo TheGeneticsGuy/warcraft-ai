@@ -1,131 +1,141 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Player Details</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Player Details</title>
+    <link rel="stylesheet" href="../css/player-details.css" />
+    <link rel="stylesheet" href="../css/header-footer.css" />
 
-  <link rel="stylesheet" href="../css/player-details.css" />
-  <link rel="stylesheet" href="../css/header-footer.css" />
+    <script type="module" src="../js/player-details.js"></script>
 
-  <script type="module" src="../js/player-details.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/images/favicon.ico" />
+  </head>
 
-  <!-- Favicon -->
-  <link rel="icon" href="/images/favicon.ico" />
-</head>
+  <body>
+    <header class="divider" id="main-header"></header>
 
-<body>
-  <header class="divider" id="main-header"></header>
-
-  <main>
-    <div id="main_body">
-      <div id="loading-message" style="text-align: center; padding: 2rem">
-        Loading player details...
-      </div>
-
-      <div class="player-detail-content" style="display: none">
-        <!-- Hiding until loaded -->
-        <h2 id="character-name-title">Character Details</h2>
-
-        <div class="details-grid">
-          <!-- Left Column -->
-          <div class="detail-column" id="detail-col-left">
-            <div id="player-avatar-container">
-              <img id="player-avatar" src="/images/player-icon.webp" alt="Character Avatar" style="display: none" />
-              <p id="avatar-loading" style="display: none">
-                Loading avatar...
-              </p>
-              <p id="avatar-unavailable" style="display: none">
-                Avatar not available.
-              </p>
-            </div>
-            <div class="detail-item">
-              <div class="left-col-det">
-                <span class="detail-label">Level:</span>
-              </div>
-              <div class="right-col-det">
-                <span class="detail-value" id="player-level">N/A</span>
-              </div>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Race:</span>
-              <span class="detail-value" id="player-race">N/A</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Class:</span>
-              <span class="detail-value" id="player-class">N/A</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Gender:</span>
-              <span class="detail-value" id="player-gender">N/A</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Faction:</span>
-              <span class="detail-value" id="player-faction">N/A</span>
-            </div>
-          </div>
-
-          <!-- Right Column -->
-          <div class="detail-column" id="detail-col-right">
-            <div class="detail-item">
-              <span class="detail-label">Realm:</span>
-              <span class="detail-value" id="player-realm">N/A</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Region:</span>
-              <span class="detail-value" id="player-region">N/A</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Title:</span>
-              <span class="detail-value" id="player-title">N/A</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Guild:</span>
-              <span class="detail-value" id="player-guild">N/A</span>
-            </div>
-            <!--Because some info will not be available on Classic Era - below will be hidden-->
-            <div class="detail-item item-optional" id="item-level-section">
-              <span class="detail-label">Avg Item Level:</span>
-              <span class="detail-value" id="player-ilvl">N/A</span>
-            </div>
-            <div class="detail-item item-optional" id="achievements-section">
-              <span class="detail-label">Achievement Points:</span>
-              <span class="detail-value" id="player-achievements">N/A</span>
-            </div>
-            <div class="detail-item item-optional" id="mounts-section">
-              <span class="detail-label">Mounts Collected:</span>
-              <span class="detail-value" id="player-mounts">N/A</span>
-            </div>
-            <div class="detail-item item-optional" id="pets-section">
-              <span class="detail-label">Pets Collected:</span>
-              <span class="detail-value" id="player-pets">N/A</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Game Version:</span>
-              <span class="detail-value" id="player-game-version">N/A</span>
-            </div>
-          </div>
+    <main>
+      <div id="main_body">
+        <div id="loading-message" style="text-align: center; padding: 2rem">
+          Loading player details...
         </div>
 
-        <!-- AI Summary Section -->
-        <div id="ai-summary-container" style="display: none; margin-top: 2rem">
-          <h3>Azerothian Chronicle</h3>
-          <div id="ai-summary-content">
-            <p id="ai-summary-text">Loading chronicle...</p>
-            <small id="ai-timestamp"></small>
+        <div class="player-detail-content" style="display: none">
+          <!-- Hiding until loaded -->
+          <h2 id="character-name-title">Character Details</h2>
+
+          <div class="details-grid">
+            <!-- Left Column -->
+            <div class="detail-column" id="detail-col-left">
+              <div id="player-avatar-container">
+                <img
+                  id="player-avatar"
+                  src="/images/player-icon.webp"
+                  alt="Character Avatar"
+                  style="display: none"
+                />
+                <p id="avatar-loading" style="display: none">
+                  Loading avatar...
+                </p>
+                <p id="avatar-unavailable" style="display: none">
+                  Avatar not available.
+                </p>
+              </div>
+              <div class="detail-item">
+                <div class="left-col-det">
+                  <span class="detail-label">Level:</span>
+                </div>
+                <div class="right-col-det">
+                  <span class="detail-value" id="player-level">N/A</span>
+                </div>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Race:</span>
+                <span class="detail-value" id="player-race">N/A</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Class:</span>
+                <span class="detail-value" id="player-class">N/A</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Gender:</span>
+                <span class="detail-value" id="player-gender">N/A</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Faction:</span>
+                <span class="detail-value" id="player-faction">N/A</span>
+              </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="detail-column" id="detail-col-right">
+              <div class="detail-item">
+                <span class="detail-label">Realm:</span>
+                <span class="detail-value" id="player-realm">N/A</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Region:</span>
+                <span class="detail-value" id="player-region">N/A</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Title:</span>
+                <span class="detail-value" id="player-title">N/A</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Guild:</span>
+                <span class="detail-value" id="player-guild">N/A</span>
+              </div>
+              <!--Because some info will not be available on Classic Era - below will be hidden-->
+              <div class="detail-item item-optional" id="item-level-section">
+                <span class="detail-label">Avg Item Level:</span>
+                <span class="detail-value" id="player-ilvl">N/A</span>
+              </div>
+              <div class="detail-item item-optional" id="achievements-section">
+                <span class="detail-label">Achievement Points:</span>
+                <span class="detail-value" id="player-achievements">N/A</span>
+              </div>
+              <div class="detail-item item-optional" id="mounts-section">
+                <span class="detail-label">Mounts Collected:</span>
+                <span class="detail-value" id="player-mounts">N/A</span>
+              </div>
+              <div class="detail-item item-optional" id="pets-section">
+                <span class="detail-label">Pets Collected:</span>
+                <span class="detail-value" id="player-pets">N/A</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Game Version:</span>
+                <span class="detail-value" id="player-game-version">N/A</span>
+              </div>
+            </div>
           </div>
-          <button id="refresh-ai-summary">Refresh Chronicle</button>
+
+          <!-- AI Summary Section -->
+          <div
+            id="ai-summary-container"
+            style="display: none; margin-top: 2rem"
+          >
+            <h3>Azerothian Chronicle</h3>
+            <div id="ai-summary-content">
+              <p id="ai-summary-text">Loading chronicle...</p>
+              <small id="ai-timestamp"></small>
+            </div>
+            <button id="refresh-ai-summary">Refresh Chronicle</button>
+          </div>
+
+          <!-- Error Message Area for this page -->
+          <div
+            id="detail-error-message"
+            class="error-message"
+            style="display: none"
+          ></div>
         </div>
-
-        <!-- Error Message Area for this page -->
-        <div id="detail-error-message" class="error-message" style="display: none"></div>
       </div>
-    </div>
 
-    <div class="divider-footer"></div>
-  </main>
-  <footer id="main-footer"></footer>
-</body>
-
+      <div class="divider-footer"></div>
+    </main>
+    <footer id="main-footer"></footer>
+  </body>
 </html>

@@ -57,7 +57,8 @@ async function getRealms(token) {
       currentNamespace,
       currentLocale,
     });
-    realmGrid.innerHTML = '<p class="error-message">Error: Missing region, game type, or locale selection.</p>';
+    realmGrid.innerHTML =
+      '<p class="error-message">Error: Missing region, game type, or locale selection.</p>';
     realmCountEl.textContent = '0';
     return null;
   }
@@ -85,9 +86,15 @@ async function getRealms(token) {
         console.error(`API Error (${response.status}):`, errorBody);
         // Handle specific errors if needed (e.g., 404 might mean bad namespace/region combo)
         if (response.status === 404) {
-          throw new Error(`No data found for ${currentRegion}/${currentNamespace}. Check filters. Status: ${response.status}`);
+          throw new Error(
+            `No data found for ${currentRegion}/${currentNamespace}. Check filters. Status: ${response.status}`,
+          );
         }
-        throw new Error(errorBody.detail || errorBody.error_description || `HTTP Error! Status: ${response.status}`);
+        throw new Error(
+          errorBody.detail ||
+            errorBody.error_description ||
+            `HTTP Error! Status: ${response.status}`,
+        );
       } catch (jsonError) {
         console.error('Failed to parse error response:', jsonError);
         throw new Error(`HTTP Error! Status: ${response.status}`);
@@ -115,15 +122,23 @@ async function getRealms(token) {
         const slug = realmInfo.slug;
 
         if (!name || !slug) {
-          console.warn('Skipping realm due to missing name or slug:', realmInfo);
+          console.warn(
+            'Skipping realm due to missing name or slug:',
+            realmInfo,
+          );
           return;
         }
 
         const typeLocalized =
-          (realmInfo.type && realmInfo.type.name && (realmInfo.type.name[currentLocale] || realmInfo.type.name['en_US'])) ||
+          (realmInfo.type &&
+            realmInfo.type.name &&
+            (realmInfo.type.name[currentLocale] ||
+              realmInfo.type.name['en_US'])) ||
           'N/A';
         const categoryLocalized =
-          (realmInfo.category && (realmInfo.category[currentLocale] || realmInfo.category['en_US'])) ||
+          (realmInfo.category &&
+            (realmInfo.category[currentLocale] ||
+              realmInfo.category['en_US'])) ||
           'N/A';
 
         allIndividualRealms.push({
@@ -145,7 +160,7 @@ async function getRealms(token) {
         !realm.name.toLowerCase().startsWith('test realm') &&
         !realm.name.toLowerCase().startsWith('ptr') &&
         !realm.name.startsWith('US') &&
-        !realm.name.includes('CWOW')
+        !realm.name.includes('CWOW'),
     );
 
     let sortedRealms = filteredRealms.sort((a, b) =>
@@ -153,7 +168,6 @@ async function getRealms(token) {
     );
 
     return sortedRealms;
-
   } catch (error) {
     console.error('Error fetching or processing realms:', error);
     realmGrid.innerHTML = `<p class="error-message">Error loading realms: ${error.message}. Please try again or check filters.</p>`;

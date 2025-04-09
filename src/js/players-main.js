@@ -118,8 +118,8 @@ async function fetchRealmListForDropdown(region, urlType) {
         }
         throw new Error(
           errorBody.detail ||
-          errorBody.title ||
-          `Failed to fetch realms. Status: ${response.status}`,
+            errorBody.title ||
+            `Failed to fetch realms. Status: ${response.status}`,
         );
       } catch (jsonError) {
         console.error(

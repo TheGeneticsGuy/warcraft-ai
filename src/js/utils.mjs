@@ -163,7 +163,6 @@ export function getPrimaryName(nameData, preferredLocale = 'en_US') {
 }
 
 /**
- * @deprecated Prefer using getPrimaryName for more general use.
  * Gets the primary name of a realm from its localized name object.
  * Prefers the provided locale, falls back to en_US, then takes the first available.
  * @param {object} nameObject The localized name object (e.g., { en_US: '...', es_MX: '...' })

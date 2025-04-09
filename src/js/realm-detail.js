@@ -29,7 +29,7 @@ const realmDetailSection = document.querySelector('.realm-detail');
 async function fetchRealmDetailsApi(
   region,
   apiNamespacePrefix,
-  realmSlug,
+  realmSlug, // The slug of the specific realm we want details for
   token,
 ) {
   if (!region || !apiNamespacePrefix || !realmSlug || !token) {
@@ -38,21 +38,18 @@ async function fetchRealmDetailsApi(
   }
 
   const fullApiNamespace = `${apiNamespacePrefix}-${region}`;
-  // USE THE SEARCH ENDPOINT - it returns connected realm groups directly
-  let searchUrl = `https://${region}.api.blizzard.com/data/wow/search/connected-realm?namespace=${fullApiNamespace}&_pageSize=1000`; // Use large page size
-
-  // We only need en_US names generally for matching/displaying if locale fails
-  searchUrl += `&locale=en_US`;
+  let searchUrl = `https://${region}.api.blizzard.com/data/wow/search/connected-realm?namespace=${fullApiNamespace}&_pageSize=1000&locale=en_US`; // Simplified URL
 
   try {
-    // 1. Fetch the list of ALL connected realms for the namespace/region
     const searchResponse = await fetch(searchUrl, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!searchResponse.ok) {
-      const errorBody = await searchResponse.json().catch(() => ({
-        message: `Search fetch failed: ${searchResponse.status}`,
-      }));
+      const errorBody = await searchResponse
+        .json()
+        .catch(() => ({
+          message: `Search fetch failed: ${searchResponse.status}`,
+        }));
       throw new Error(
         errorBody.message || `Search fetch failed: ${searchResponse.status}`,
       );
@@ -60,10 +57,6 @@ async function fetchRealmDetailsApi(
     const searchData = await searchResponse.json();
 
     if (!searchData.results || searchData.results.length === 0) {
-      console.error(
-        'No connected realm results found for namespace:',
-        fullApiNamespace,
-      );
       return {
         name: realmSlug
           .replace(/-/g, ' ')
@@ -72,24 +65,22 @@ async function fetchRealmDetailsApi(
       };
     }
 
-    // 2. Find the specific connected realm group that CONTAINS the target realmSlug
     let targetConnectedRealmData = null;
+    let specificRealmObject = null;
+
     for (const result of searchData.results) {
-      // Check if the 'realms' array exists in the current result's data
       if (
         result.data &&
         result.data.realms &&
         Array.isArray(result.data.realms)
       ) {
-        // Check if any realm within this connected group matches the slug
         const foundRealm = result.data.realms.find((r) => r.slug === realmSlug);
         if (foundRealm) {
-          // Found the connected realm group! Use its data.
           targetConnectedRealmData = result.data;
-          break; // Stop searching once found
+          specificRealmObject = foundRealm;
+          break;
         }
       } else {
-        // Log if a result has an unexpected structure
         console.warn(
           'Skipping connected realm search result with unexpected data structure:',
           result,
@@ -97,11 +88,10 @@ async function fetchRealmDetailsApi(
       }
     }
 
-    if (!targetConnectedRealmData) {
+    if (!targetConnectedRealmData || !specificRealmObject) {
       console.error(
         `Realm slug '${realmSlug}' not found within any connected realm group in region '${region}' namespace '${fullApiNamespace}'. Check if the slug and namespace are correct.`,
       );
-      // Provide a more informative error, potentially listing available slugs if feasible (for debugging)
       return {
         name: realmSlug
           .replace(/-/g, ' ')
@@ -110,47 +100,48 @@ async function fetchRealmDetailsApi(
       };
     }
 
-    // 3. Extract and format data directly from the found connected realm data
-    // No need for a second fetch, the search result already has the details.
-    const primaryRealm = targetConnectedRealmData.realms[0]; // Use first realm as representative
     const realmDetails = {
       has_queue: targetConnectedRealmData.has_queue,
-      status: targetConnectedRealmData.status.type, // UP, DOWN
+      status: targetConnectedRealmData.status.type,
       statusLocalized: getPrimaryRealmName(
         targetConnectedRealmData.status.name,
       ),
-      population: targetConnectedRealmData.population.type, // LOW, MEDIUM, HIGH, FULL etc.
+      population: targetConnectedRealmData.population.type,
       populationLocalized: getPrimaryRealmName(
         targetConnectedRealmData.population.name,
       ),
+
       realms: targetConnectedRealmData.realms.map((r) => ({
-        name: getPrimaryRealmName(r.name), // Already correct
+        name: getPrimaryRealmName(r.name),
         slug: r.slug,
         id: r.id,
         timezone: r.timezone,
-        type: getPrimaryRealmName(r.type.name), // Apply utility here
-        category: getPrimaryRealmName(r.category), // Apply utility here
+        type: getPrimaryRealmName(r.type.name),
+        category: getPrimaryRealmName(r.category),
         locale: r.locale,
       })),
-      // Use details from the first realm as representative for the connected group display
-      name: getPrimaryRealmName(primaryRealm.name), // Already correct
-      timezone: primaryRealm.timezone,
-      type: getPrimaryRealmName(primaryRealm.type.name), // Apply utility here
-      category: getPrimaryRealmName(primaryRealm.category), // Apply utility here
-      locale: primaryRealm.locale,
-      // Get the region name string using the utility function
-      region: getPrimaryRealmName(primaryRealm.region.name), // Apply utility here
+
+      name: getPrimaryRealmName(specificRealmObject.name),
+      slug: specificRealmObject.slug,
+      id: specificRealmObject.id,
+      timezone: specificRealmObject.timezone,
+      type: getPrimaryRealmName(specificRealmObject.type.name),
+      category: getPrimaryRealmName(specificRealmObject.category),
+      locale: specificRealmObject.locale,
+      region: getPrimaryRealmName(specificRealmObject.region.name),
     };
 
+    console.log(
+      `[Realm Details] Fetched details for: ${realmDetails.name} (Slug: ${realmSlug})`,
+    );
     return realmDetails;
   } catch (error) {
     console.error(
       'Error fetching or processing connected realm details:',
       error,
     );
-    // Display error within the main section
     realmDetailSection.innerHTML = `<p class="error-message">Error loading realm details: ${error.message}</p>`;
-    return null; // Indicate failure
+    return null;
   }
 }
 
@@ -280,7 +271,7 @@ if the realm type is normal, then identify it as a PVE realm, not a "normal" rea
 5.  **Famous Guilds - IMPORTANT CAVEAT:** Mention globally famous competitive guilds (like Liquid, Echo, Method, etc.) **ONLY IF** your training data strongly and accurately indicates they had a significant, well-documented historical presence, origin, or major achievement *directly tied to "${realmName}" or its specific connected realms*. **If there is no such direct, verifiable connection, DO NOT mention these famous guilds at all, not even to state they aren't present.** Focus on the realm's own history.
 6.  **Tone & Style:** Write with narrative flair, evocative language, and the authority of an Azerothian historian. Maintain factual accuracy based on the provided details and your general knowledge base.
 7.  **Handling Scarcity:** If significant historical details or notable events specific to "${realmName}" are scarce in your training data, acknowledge this humbly (e.g., "While specific chronicles are sparse...") rather than fabricating information. Prioritize accuracy and relevance to the provided realm details.
-8. **Length:** Aim for 2-3 informative paragraphs. Either amount is appropriate. As long is it is informative and useful. You do not have to include every single aspect mentioned here, if it seems like maybe it is not relevant. Use your judgement on what to share based on this prompt. Weave these details (or lack thereof, omitting gracefully if details are sparse or insignificant) into a compelling narrative fitting the Warcraft universe. End with a sentence that sparks curiosity about the server's past exploits or future adventures. Avoid clichés like "gather 'round'"
+8. **Length:** Aim for 2-3 informative paragraphs. Either amount is appropriate. As long is it is informative and useful. You do not have to include every single aspect mentioned here, if it seems like maybe it is not relevant. Use your judgement on what to share based on this prompt. Weave these details (or lack thereof, omitting gracefully if details are sparse or insignificant) into a compelling narrative fitting the Warcraft universe. End with a sentence that sparks curiosity about the server's past exploits or future adventures. Avoid clichés like "gather 'round'", or "From the dusty tomes" and so on. Be unique in your approach to this.
 
 Begin your chronicle now for "${realmName}" (${region}).
 `;
@@ -293,7 +284,7 @@ Begin your chronicle now for "${realmName}" (${region}).
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+        generationConfig: { temperature: 1.2, maxOutputTokens: 1024 },
       }),
     });
 
@@ -304,7 +295,7 @@ Begin your chronicle now for "${realmName}" (${region}).
       console.error('Gemini API Error Response:', errorBody);
       throw new Error(
         errorBody.error?.message ||
-        `Gemini API request failed: ${response.status}`,
+          `Gemini API request failed: ${response.status}`,
       );
     }
 

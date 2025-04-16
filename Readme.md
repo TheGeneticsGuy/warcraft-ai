@@ -13,7 +13,7 @@ _Click the image to navigate to the live deployed website on Netlify!_
 
 ## Summary of the Project
 
-Discover unique insights into the Players and Realms surrounding World of Warcraft. This site uses AI to generate brief, fun, flavorful and historical summaries for WoW realms or engaging character chronicles for players based on some of the available Armory data. In additiona to being able to explore the current realm status of all available realms, have fun reading an AI generated summary and history of your favorite realms. Get a unique perspective on all of your own alts, or those of your friends and guildies! Have fun exploring!
+Explore World of Warcraft through a new lens. Azeroth AI Reporter combines live realm data with AI-generated summaries to deliver lore-inspired histories for realms and characters. Whether you're checking server status or uncovering your character’s legacy, dive into a uniquely personalized view of your World of Warcraft story.
 
 # Meta-Tags enabled:
 
@@ -23,19 +23,38 @@ _Follow the demo link below and **CLICK** "Parse Meta Data" to generate_
 
 ```
 <!-- META properties Facebook -->
-  <meta property="og:title" content="Warcraft AI Report" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://warcraft-ai-report.netlify.app/" />
-  <meta property="og:image" content="/images/link-image.webp" />
-  <meta property="og:description" content="WDD 330 Aaron Topping - Final Project - Warcraft AI Report" />
+<meta
+  name="description"
+  content="Generate AI-assisted summaries and reports for World of Warcraft characters and realms."
+/>
+<meta name="author" content="Aaron Topping" />
+<meta
+  property="og:title"
+  content="Azeroth Reporter - AI Chronicles for WoW"
+/>
+<meta
+  property="og:description"
+  content="Explore World of Warcraft characters and realms like never before. Azeroth Reporter uses AI to generate roleplaying, historical-style chronicles and summaries."
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://warcraft-ai-report.netlify.app/" />
+<meta property="og:image" content="/images/link-image.webp" />
 
-  <!-- Twitter(X) Card tags -->
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Warcraft AI Report" />
-  <meta name="twitter:description" content="WDD 330 Aaron Topping - Final Project - Warcraft AI Report" />
-  <meta name="twitter:image" content="/images/link-image.webp" />
-  <meta name="twitter:url" content="https://warcraft-ai-report.netlify.app/" />
-</head>
+<!-- Twitter(X) Card tags -->
+<meta name="twitter:card" content="summary" />
+<meta
+  name="twitter:title"
+  content="Azeroth Reporter - AI Chronicles for WoW"
+/>
+<meta
+  name="twitter:description"
+  content="Explore World of Warcraft characters and realms like never before. Azeroth Reporter uses AI to generate roleplaying, historical-style chronicles and summaries."
+/>
+<meta name="twitter:image" content="/images/link-image.webp" />
+<meta
+  name="twitter:url"
+  content="https://warcraft-ai-report.netlify.app/"
+/>
 ```
 
 # AI Usage - Google's Gemini 2.0 Flash - FREE (Limited)

@@ -248,7 +248,7 @@ Begin your chronicle now for "${realmName}" (${region}).
       console.error('Gemini API Error Response:', errorBody);
       throw new Error(
         errorBody.error?.message ||
-        `Gemini API request failed: ${response.status}`,
+          `Gemini API request failed: ${response.status}`,
       );
     }
 
@@ -361,19 +361,19 @@ function populateDropdown(summaries, selectedIdx = 0) {
 }
 
 // For handling deleting the summaries
-function handleDeleteSummary(region, realmSlug) {
-  const key = `aiRealmSummary-${region}-${realmSlug}-list`;
+function handleDeleteSummary(realmDetails) {
+  const key = `${AI_CACHE_PREFIX}${realmDetails.region}-${realmDetails.slug}-list`;
   const summaries = JSON.parse(localStorage.getItem(key) || '[]');
   const selectedIdx = parseInt(summaryDropdown.value);
 
-  if (summaries.length > 0) {
+  if (summaries.length > 0 && !isNaN(selectedIdx)) {
     summaries.splice(selectedIdx, 1);
     localStorage.setItem(key, JSON.stringify(summaries));
 
     if (summaries.length === 0) {
-      displayAiSummary({ slug: realmSlug, region }, realmSlug, true);
+      displayAiSummary(realmDetails, realmDetails.slug, true);
     } else {
-      displayAiSummary({ slug: realmSlug, region }, realmSlug);
+      displayAiSummary(realmDetails, realmDetails.slug);
     }
   }
 }
@@ -483,7 +483,7 @@ async function initializePage() {
 
   confirmBtn?.addEventListener('click', () => {
     modal.setAttribute('aria-hidden', 'true');
-    handleDeleteSummary(region, realmSlug);
+    handleDeleteSummary(realmDetails);
   });
 
   cancelBtn?.addEventListener('click', () => {

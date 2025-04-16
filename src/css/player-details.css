@@ -145,6 +145,8 @@ body {
   background-color: #faf8f5;
   border: 1px solid #eee9e1;
   padding: 1.5rem;
+  padding-top: 0;
+  padding-bottom: 0;
   margin-bottom: 1rem;
   border-radius: 4px;
   line-height: 1.7;
@@ -162,7 +164,6 @@ body {
   text-align: right;
   font-size: 0.8rem;
   color: #998c7e;
-  margin-top: 0.8rem;
   font-style: italic;
 }
 

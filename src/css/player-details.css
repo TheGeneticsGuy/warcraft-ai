@@ -166,6 +166,41 @@ body {
   font-style: italic;
 }
 
+.copy-button-wrapper {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  background-color: #e8e3dd;
+  border: 1px solid #d6cfc6;
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  gap: 0.4rem;
+  transition: background-color 0.2s ease;
+}
+
+.copy-button-wrapper:hover {
+  background-color: #dcd5cd;
+}
+
+.copy-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.copy-label {
+  font-weight: 500;
+}
+
+.ai-summary-actions {
+  margin-top: 1.2rem;
+  display: flex;
+  justify-content: center;
+}
+
 #refresh-ai-summary {
   display: block;
   margin: 1rem auto 0 auto;
@@ -258,4 +293,67 @@ body {
 
 #detail-error-message {
   margin-bottom: 1.5rem;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal[aria-hidden='false'] {
+  display: flex;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 6px;
+  max-width: 380px;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  font-family: 'PT Serif', serif;
+}
+
+.modal-content h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  color: #4a3c2b;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 1.5rem;
+}
+
+.modal-btn {
+  padding: 0.6rem 1.4rem;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'PT Serif', serif;
+}
+
+.modal-btn.danger {
+  background-color: #b44242;
+  color: #fff;
+}
+
+.modal-btn.danger:hover {
+  background-color: #942e2e;
+}
+
+.modal-btn:not(.danger) {
+  background-color: #eae7e3;
+}
+
+.modal-btn:not(.danger):hover {
+  background-color: #d6d3cf;
 }

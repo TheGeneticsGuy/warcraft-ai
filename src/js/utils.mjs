@@ -62,8 +62,14 @@ export async function loadHeaderFooter() {
   // --- Render Footer ---
   if (footerElement) {
     await renderWithTemplate(footerTemplateFn, footerElement); // Use await here too for consistency
+
+    const yearSpan = footerElement.querySelector('#current-year');
+    if (yearSpan) {
+      yearSpan.textContent = new Date().getFullYear();
+    }
   }
 }
+
 /**
  * Maps the full API namespace string to a simplified URL-friendly type identifier.
  * Used by realms.js to create links.

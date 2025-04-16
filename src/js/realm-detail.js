@@ -8,23 +8,15 @@ import {
 import { getAccessToken } from './blizzAPI.js'; // Adjust path as needed
 
 // --- Constants ---
-const AI_CACHE_PREFIX = 'aiSummary-';
+const AI_CACHE_PREFIX = 'aiRealmSummary-';
 // IMPORTANT: I will need  to replace this with my backend end point eventually...
 
-// --- DOM Elements ---
-const realmNameEl = document.querySelector('#realmName');
-const realmRegionValueEl = document.querySelector('#realmRegionValue');
-const realmStatusValueEl = document.querySelector('#realmStatusValue');
-const realmPopulationValueEl = document.querySelector('#realmPopulationValue');
-const realmTypeValueEl = document.querySelector('#realmTypeValue');
-const realmCategoryValueEl = document.querySelector('#realmCategoryValue');
-const realmTimezoneValueEl = document.querySelector('#realmTimezoneValue');
-const includedRealmsEl = document.querySelector('#includedRealms');
-const aiSummaryContainer = document.querySelector('#ai-summary-container');
-const aiSummaryText = document.querySelector('#ai-summary-text');
-const aiTimestamp = document.querySelector('#ai-timestamp');
-const refreshAiButton = document.querySelector('#refresh-ai-summary');
-const realmDetailSection = document.querySelector('.realm-detail');
+let realmNameEl, realmRegionValueEl, realmStatusValueEl, realmPopulationValueEl;
+let realmTypeValueEl, realmCategoryValueEl, realmTimezoneValueEl;
+let includedRealmsEl, aiSummaryContainer, realmDetailSection;
+let aiSummaryText, aiTimestamp, refreshAiButton;
+let summaryDropdown, deleteSummaryButton;
+let modal, confirmBtn, cancelBtn;
 
 async function fetchRealmDetailsApi(
   region,
@@ -256,7 +248,7 @@ Begin your chronicle now for "${realmName}" (${region}).
       console.error('Gemini API Error Response:', errorBody);
       throw new Error(
         errorBody.error?.message ||
-          `Gemini API request failed: ${response.status}`,
+        `Gemini API request failed: ${response.status}`,
       );
     }
 
@@ -314,59 +306,99 @@ async function displayAiSummary(
     return;
   }
 
-  const cacheKey = `${AI_CACHE_PREFIX}${region}-${realmSlug}`;
-  const cachedData = localStorage.getItem(cacheKey);
-  let summary = '';
-  let timestamp = null;
+  const cacheKey = `${AI_CACHE_PREFIX}${region}-${realmSlug}-list`;
+  let summaries = JSON.parse(localStorage.getItem(cacheKey) || '[]');
 
-  if (forceRefresh || !cachedData) {
-    aiSummaryText.textContent = 'Generating realm summary...';
-    aiTimestamp.textContent = '';
-    if (refreshAiButton) refreshAiButton.disabled = true;
-    if (aiSummaryContainer) aiSummaryContainer.style.display = 'block';
+  if (!Array.isArray(summaries)) {
+    console.warn('Invalid cache format. Resetting.');
+    summaries = [];
+    localStorage.removeItem(cacheKey);
   }
 
-  if (cachedData && !forceRefresh) {
-    try {
-      const parsed = JSON.parse(cachedData);
-      summary = parsed.summary;
-      timestamp = parsed.timestamp;
-    } catch (e) {
-      console.error('Failed to parse cached AI summary', e);
-      localStorage.removeItem(cacheKey);
-      summary = '';
-      timestamp = null;
+  let selectedSummary;
+
+  if (forceRefresh || summaries.length === 0) {
+    aiSummaryText.textContent = 'Generating realm summary...';
+    aiTimestamp.textContent = '';
+    refreshAiButton?.setAttribute('disabled', 'true');
+    aiSummaryContainer.style.display = 'block';
+
+    const summary = await fetchAiSummaryDirectly(realmDetails);
+    const timestamp = Date.now();
+
+    const newEntry = { text: summary, timestamp };
+    summaries.unshift(newEntry);
+    summaries = summaries.slice(0, 10); // keep only the latest 10
+    localStorage.setItem(cacheKey, JSON.stringify(summaries));
+
+    selectedSummary = newEntry;
+    refreshAiButton?.removeAttribute('disabled');
+  } else {
+    selectedSummary = summaries[0];
+  }
+
+  aiSummaryText.textContent = selectedSummary.text || 'No summary available.';
+  aiTimestamp.textContent = selectedSummary.timestamp
+    ? `Summary generated: ${new Date(selectedSummary.timestamp).toLocaleString()}`
+    : '';
+  aiSummaryContainer.style.display = 'block';
+
+  populateDropdown(summaries);
+}
+
+function populateDropdown(summaries) {
+  if (!summaryDropdown) return;
+
+  summaryDropdown.innerHTML = '';
+  summaries.forEach((entry, index) => {
+    const option = document.createElement('option');
+    option.value = index;
+    option.textContent = `Summary #${index + 1} – ${new Date(entry.timestamp).toLocaleString()}`;
+    summaryDropdown.appendChild(option);
+  });
+}
+
+// For handling deleting the summaries
+function handleDeleteSummary(region, realmSlug) {
+  const key = `aiRealmSummary-${region}-${realmSlug}-list`;
+  const summaries = JSON.parse(localStorage.getItem(key) || '[]');
+  const selectedIdx = parseInt(summaryDropdown.value);
+
+  if (summaries.length > 0) {
+    summaries.splice(selectedIdx, 1);
+    localStorage.setItem(key, JSON.stringify(summaries));
+
+    if (summaries.length === 0) {
+      displayAiSummary({ slug: realmSlug, region }, realmSlug, true);
+    } else {
+      displayAiSummary({ slug: realmSlug, region }, realmSlug);
     }
   }
-
-  if (!summary || forceRefresh) {
-    aiSummaryText.textContent = 'Generating realm summary...';
-    aiTimestamp.textContent = '';
-    if (refreshAiButton) refreshAiButton.disabled = true;
-
-    summary = await fetchAiSummaryDirectly(realmDetails);
-
-    timestamp = new Date().toISOString();
-    localStorage.setItem(cacheKey, JSON.stringify({ summary, timestamp }));
-
-    if (refreshAiButton) refreshAiButton.disabled = false;
-  }
-
-  aiSummaryText.textContent =
-    summary || 'No summary could be generated or retrieved.';
-  if (timestamp) {
-    aiTimestamp.textContent = `Summary generated: ${new Date(
-      timestamp,
-    ).toLocaleString()}`;
-  } else {
-    aiTimestamp.textContent = '';
-  }
-  if (aiSummaryContainer) aiSummaryContainer.style.display = 'block';
 }
 
 // --- Initialization ---
 async function initializePage() {
-  loadHeaderFooter();
+  await loadHeaderFooter();
+
+  // DOM Elements
+  realmNameEl = document.querySelector('#realmName');
+  realmRegionValueEl = document.querySelector('#realmRegionValue');
+  realmStatusValueEl = document.querySelector('#realmStatusValue');
+  realmPopulationValueEl = document.querySelector('#realmPopulationValue');
+  realmTypeValueEl = document.querySelector('#realmTypeValue');
+  realmCategoryValueEl = document.querySelector('#realmCategoryValue');
+  realmTimezoneValueEl = document.querySelector('#realmTimezoneValue');
+  includedRealmsEl = document.querySelector('#includedRealms');
+  aiSummaryContainer = document.querySelector('#ai-summary-container');
+  realmDetailSection = document.querySelector('.realm-detail');
+  aiSummaryText = document.querySelector('#ai-summary-text');
+  aiTimestamp = document.querySelector('#ai-timestamp');
+  refreshAiButton = document.querySelector('#refresh-ai-summary');
+  summaryDropdown = document.querySelector('#summary-select');
+  deleteSummaryButton = document.querySelector('#delete-summary');
+  modal = document.querySelector('#delete-confirm-modal');
+  confirmBtn = document.querySelector('#confirm-delete');
+  cancelBtn = document.querySelector('#cancel-delete');
 
   const realmSlug = getParam('realmSlug');
   const region = getParam('region');
@@ -392,13 +424,91 @@ async function initializePage() {
   );
 
   renderBlizzardDetails(realmDetails, region);
-  displayAiSummary(realmDetails, realmSlug);
+  await displayAiSummary(realmDetails, realmSlug); // ← supports multiple summaries
 
-  if (refreshAiButton) {
-    refreshAiButton.addEventListener('click', () => {
-      displayAiSummary(realmDetails, realmSlug, true); // 👈 forceRefresh = true
+  refreshAiButton?.addEventListener('click', () => {
+    displayAiSummary(realmDetails, realmSlug, true);
+  });
+
+  const copyWrapper = document.querySelector('#copy-ai-wrapper');
+  const copyLabel = copyWrapper?.querySelector('.copy-label');
+
+  if (copyWrapper && aiSummaryText) {
+    const doCopy = () => {
+      const summary = aiSummaryText.textContent;
+      if (!summary) return;
+
+      navigator.clipboard
+        .writeText(summary)
+        .then(() => {
+          copyLabel.textContent = 'Copied!';
+          setTimeout(() => {
+            copyLabel.textContent = 'Copy';
+          }, 1500);
+        })
+        .catch((err) => {
+          console.error('Clipboard copy failed:', err);
+          copyLabel.textContent = 'Error';
+        });
+    };
+
+    copyWrapper.addEventListener('click', doCopy);
+    copyWrapper.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        doCopy();
+      }
     });
   }
+
+  summaryDropdown?.addEventListener('change', () => {
+    const selectedIdx = parseInt(summaryDropdown.value);
+    const key = `aiRealmSummary-${region}-${realmSlug}-list`;
+    const summaries = JSON.parse(localStorage.getItem(key) || '[]');
+    const selected = summaries[selectedIdx];
+    if (selected) {
+      aiSummaryText.textContent = selected.text;
+      aiTimestamp.textContent = `Chronicle generated: ${new Date(selected.timestamp).toLocaleString()}`;
+    }
+  });
+
+  deleteSummaryButton?.addEventListener('click', () => {
+    modal?.setAttribute('aria-hidden', 'false');
+    modal?.focus();
+  });
+
+  confirmBtn?.addEventListener('click', () => {
+    modal.setAttribute('aria-hidden', 'true');
+    handleDeleteSummary(region, realmSlug);
+  });
+
+  cancelBtn?.addEventListener('click', () => {
+    modal.setAttribute('aria-hidden', 'true');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.getAttribute('aria-hidden') === 'false') {
+      modal.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  // Focus trap for accessibility
+  modal?.addEventListener('keydown', (e) => {
+    const focusable = modal.querySelectorAll('button');
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.key === 'Tab') {
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
 }
 
 document.addEventListener('DOMContentLoaded', initializePage);

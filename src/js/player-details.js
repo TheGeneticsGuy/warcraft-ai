@@ -171,20 +171,20 @@ async function fetchPlayerData(
       mountsCollection:
         urlType !== 'classicera'
           ? fetchWithTimeout(`${baseUrl}/collections/mounts${profileParams}`, {
-            headers,
-          }).catch((e) => {
-            console.warn('Mounts fetch failed (non-critical):', e);
-            return null;
-          })
+              headers,
+            }).catch((e) => {
+              console.warn('Mounts fetch failed (non-critical):', e);
+              return null;
+            })
           : Promise.resolve(null),
       petsCollection:
         urlType !== 'classicera'
           ? fetchWithTimeout(`${baseUrl}/collections/pets${profileParams}`, {
-            headers,
-          }).catch((e) => {
-            console.warn('Pets fetch failed (non-critical):', e);
-            return null;
-          })
+              headers,
+            }).catch((e) => {
+              console.warn('Pets fetch failed (non-critical):', e);
+              return null;
+            })
           : Promise.resolve(null),
       achievementSummary: fetchWithTimeout(
         `${baseUrl}/achievements${profileParams}`,
@@ -506,7 +506,7 @@ async function fetchAiSummaryDirectly(playerData) {
       console.error('Gemini API Error Response:', errorBody);
       throw new Error(
         errorBody.error?.message ||
-        `Gemini API request failed: ${response.status}`,
+          `Gemini API request failed: ${response.status}`,
       );
     }
     const data = await response.json();
@@ -705,6 +705,23 @@ async function initializePage() {
     return;
   }
 
+  function handleDeleteSummary(playerDataResult) {
+    const selectedIdx = parseInt(summaryDropdown.value);
+    const key = `${AI_CACHE_PREFIX}${playerDataResult.region}-${playerDataResult.realmSlug}-${playerDataResult.name.toLowerCase()}-list`;
+    const summaries = JSON.parse(localStorage.getItem(key) || '[]');
+
+    if (summaries.length > 0) {
+      summaries.splice(selectedIdx, 1);
+      localStorage.setItem(key, JSON.stringify(summaries));
+
+      if (summaries.length === 0) {
+        displayAiSummary(playerDataResult, true); // Force new generation
+      } else {
+        displayAiSummary(playerDataResult); // Load most recent
+      }
+    }
+  }
+
   // --- Fetch and Render Player Data ---
   let playerDataResult; // Store the whole result temporarily
   try {
@@ -739,6 +756,39 @@ async function initializePage() {
       console.warn('Refresh AI button not found.');
     }
 
+    // Copy Text Integration
+
+    const copyWrapper = document.querySelector('#copy-ai-wrapper');
+    const copyLabel = copyWrapper?.querySelector('.copy-label');
+
+    if (copyWrapper && aiSummaryText) {
+      const doCopy = () => {
+        const summary = aiSummaryText.textContent;
+        if (!summary) return;
+
+        navigator.clipboard
+          .writeText(summary)
+          .then(() => {
+            copyLabel.textContent = 'Copied!';
+            setTimeout(() => {
+              copyLabel.textContent = 'Copy';
+            }, 1500);
+          })
+          .catch((err) => {
+            console.error('Clipboard copy failed:', err);
+            copyLabel.textContent = 'Error';
+          });
+      };
+
+      copyWrapper.addEventListener('click', doCopy);
+      copyWrapper.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          doCopy();
+        }
+      });
+    }
+
     if (summaryDropdown) {
       summaryDropdown.addEventListener('change', () => {
         const selectedIdx = parseInt(summaryDropdown.value);
@@ -752,29 +802,59 @@ async function initializePage() {
       });
     }
 
+    const modal = document.querySelector('#delete-confirm-modal');
+    const confirmBtn = document.querySelector('#confirm-delete');
+    const cancelBtn = document.querySelector('#cancel-delete');
+
     if (deleteSummaryButton) {
       deleteSummaryButton.addEventListener('click', () => {
-        const confirmed = confirm(
-          'Are you sure you want to delete this chronicle?',
-        );
-        if (!confirmed) return;
-
-        const selectedIdx = parseInt(summaryDropdown.value);
-        const key = `${AI_CACHE_PREFIX}${playerDataResult.region}-${playerDataResult.realmSlug}-${playerDataResult.name.toLowerCase()}-list`;
-        const summaries = JSON.parse(localStorage.getItem(key) || '[]');
-
-        if (summaries.length > 0) {
-          summaries.splice(selectedIdx, 1);
-          localStorage.setItem(key, JSON.stringify(summaries));
-
-          if (summaries.length === 0) {
-            displayAiSummary(playerDataResult, true); // Force new generation
-          } else {
-            displayAiSummary(playerDataResult); // Load next one
-          }
-        }
+        modal.setAttribute('aria-hidden', 'false');
+        modal.focus(); // Focus modal for accessibility
       });
     }
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', () => {
+        modal.setAttribute('aria-hidden', 'true');
+        handleDeleteSummary(playerDataResult);
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        modal.setAttribute('aria-hidden', 'true');
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (
+        e.key === 'Escape' &&
+        modal?.getAttribute('aria-hidden') === 'false'
+      ) {
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    // Adding FOCUS trap for accessibility for the modal
+    modal.addEventListener('keydown', (e) => {
+      const focusableElements = modal.querySelectorAll('button');
+      const first = focusableElements[0];
+      const last = focusableElements[focusableElements.length - 1];
+
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    });
   } catch (fetchError) {
     showError(`Error loading player data: ${fetchError.message}`);
     if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';

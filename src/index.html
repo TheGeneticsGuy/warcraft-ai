@@ -3,14 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Warcraft AI Reporter</title>
+    <title>Azeroth Reporter</title>
 
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="/css/header-footer.css" />
 
     <script src="js/main.js" type="module"></script>
 
-    <link rel="icon" href="/images/favicon.ico" />
+    <!-- Favicon -->
+    <link rel="icon" href="images/favicon.ico" />
 
     <meta
       name="description"
@@ -19,21 +20,27 @@
     <meta name="author" content="Aaron Topping" />
 
     <!-- META properties Facebook -->
-    <meta property="og:title" content="Warcraft AI Report" />
+    <meta
+      property="og:title"
+      content="Azeroth Reporter - AI Chronicles for WoW"
+    />
+    <meta
+      property="og:description"
+      content="Explore World of Warcraft characters and realms like never before. Azeroth Reporter uses AI to generate roleplaying, historical-style chronicles and summaries."
+    />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://warcraft-ai-report.netlify.app/" />
     <meta property="og:image" content="/images/link-image.webp" />
-    <meta
-      property="og:description"
-      content="WDD 330 Aaron Topping - Final Project - Warcraft AI Report"
-    />
 
     <!-- Twitter(X) Card tags -->
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Warcraft AI Report" />
+    <meta
+      name="twitter:title"
+      content="Azeroth Reporter - AI Chronicles for WoW"
+    />
     <meta
       name="twitter:description"
-      content="WDD 330 Aaron Topping - Final Project - Warcraft AI Report"
+      content="Explore World of Warcraft characters and realms like never before. Azeroth Reporter uses AI to generate roleplaying, historical-style chronicles and summaries."
     />
     <meta name="twitter:image" content="/images/link-image.webp" />
     <meta
@@ -42,10 +49,16 @@
     />
   </head>
 
+  <!-- SEO -->
+  <meta
+    name="keywords"
+    content="World of Warcraft, WoW realms, WoW players, AI summaries, Warcraft history, Azeroth Reporter, Realm Status, Server Status, WOW Server Status"
+  />
+
   <body>
     <header class="divider" id="main-header"></header>
 
-    <main class="home-main">
+    <main class="home-main" role="main">
       <div class="home-content-wrapper">
         <section class="welcome-section">
           <h2>Welcome to the Warcraft AI Reporter!</h2>
@@ -65,9 +78,17 @@
         <section class="navigation-options">
           <h3>Choose Your Path:</h3>
           <div class="nav-card-container">
-            <a href="/players/" class="nav-card players-card">
+            <a
+              href="/players/"
+              class="nav-card players-card"
+              aria-label="Go to the player chronicle search page"
+            >
               <div class="nav-card-icon">
-                <img src="/images/player-icon.webp" alt="Player Icon" />
+                <img
+                  src="/images/player-icon.webp"
+                  alt="Player Icon"
+                  loading="lazy"
+                />
               </div>
               <h4>Player Chronicle</h4>
               <p>
@@ -75,9 +96,17 @@
                 journey.
               </p>
             </a>
-            <a href="/realms/" class="nav-card realms-card">
+            <a
+              href="/realms/"
+              class="nav-card realms-card"
+              aria-label="Explore Warcraft realm reports and history"
+            >
               <div class="nav-card-icon">
-                <img src="/images/realm-icon.webp" alt="Realm Icon" />
+                <img
+                  src="/images/realm-icon.webp"
+                  alt="Realm Icon"
+                  loading="lazy"
+                />
               </div>
               <h4>Realm Report</h4>
               <p>
@@ -91,6 +120,6 @@
     </main>
 
     <div class="divider-footer"></div>
-    <footer id="main-footer"></footer>
+    <footer id="main-footer" role="contentinfo"></footer>
   </body>
 </html>

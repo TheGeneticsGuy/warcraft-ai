@@ -1,43 +1,22 @@
-// src/js/blizzAPI.js
-import ENV from './env.js';
-
-async function getKeys() {
-  try {
-    return {
-      client_id: ENV.CLIENT_ID,
-      client_secret: ENV.CLIENT_SECRET,
-    };
-  } catch (error) {
-    console.error('Error getting keys:', error);
-  }
-}
-
 async function getAccessToken() {
-  const keys = await getKeys();
+  try {
+    // Call the Netlify function endpoint (relative path)
+    const response = await fetch('/.netlify/functions/getAccessToken', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (keys) {
-    const { client_id, client_secret } = keys;
-    const url = 'https://us.battle.net/oauth/token';
-    const auth = btoa(`${client_id}:${client_secret}`);
-
-    try {
-      const tokenResponse = await fetch(url, {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'grant_type=client_credentials',
-      });
-      if (tokenResponse.ok) {
-        const data = await tokenResponse.json();
-        return data.access_token;
-      } else {
-        throw new Error(await tokenResponse.text());
-      }
-    } catch (error) {
-      console.log(error);
+    if (!response.ok) {
+      throw new Error(`Failed to get access token: ${await response.text()}`);
     }
+
+    const data = await response.json();
+    return data.access_token;
+  } catch (error) {
+    console.error('Error getting access token:', error);
+    return null;
   }
 }
 

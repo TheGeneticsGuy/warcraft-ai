@@ -45,11 +45,9 @@ async function fetchRealmDetailsApi(
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!searchResponse.ok) {
-      const errorBody = await searchResponse
-        .json()
-        .catch(() => ({
-          message: `Search fetch failed: ${searchResponse.status}`,
-        }));
+      const errorBody = await searchResponse.json().catch(() => ({
+        message: `Search fetch failed: ${searchResponse.status}`,
+      }));
       throw new Error(
         errorBody.message || `Search fetch failed: ${searchResponse.status}`,
       );
@@ -131,9 +129,6 @@ async function fetchRealmDetailsApi(
       region: getPrimaryRealmName(specificRealmObject.region.name),
     };
 
-    console.log(
-      `[Realm Details] Fetched details for: ${realmDetails.name} (Slug: ${realmSlug})`,
-    );
     return realmDetails;
   } catch (error) {
     console.error(
@@ -209,47 +204,13 @@ function renderBlizzardDetails(realm, regionParam) {
   if (aiSummaryContainer) aiSummaryContainer.style.display = 'block';
 }
 
-// --- AI Summary Functions ---
-
-/**
- * Fetches AI summary from the backend (SECURE WAY)
- */
-// async function fetchAiSummaryFromBackend(realmName, region) {
-//     try {
-//         const response = await fetch(AI_API_ENDPOINT, {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ realmName, region }),
-//         });
-//         if (!response.ok) {
-//             const errorData = await response
-//                 .json()
-//                 .catch(() => ({ message: response.statusText }));
-//             throw new Error(
-//                 `Backend AI request failed: ${errorData.message || response.status}`,
-//             );
-//         }
-//         const data = await response.json();
-//         return data.summary; // Assuming your backend returns { summary: "..." }
-//     } catch (error) {
-//         console.error('Error fetching AI summary from backend:', error);
-//         return `Error generating summary: ${error.message}`;
-//     }
-// }
-
 async function fetchAiSummaryDirectly(realmDetails) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-  if (!apiKey) {
-    return 'AI summary configuration error (missing key).';
-  }
-
   const realmName = realmDetails.name || 'this realm';
   const region = realmDetails.region || 'its region';
   const realmType = realmDetails.type || 'unknown type';
   const category = realmDetails.category || 'standard';
 
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const API_URL = '/.netlify/functions/generateGeminiSummary';
 
   const prompt = `
 Adopt the persona of a knowledgeable and eloquent Azerothian chronicler or historian, recounting tales of Azeroth, of stories of great adventurers... Do not reference anything indicating the digital nature of the game or the world. Do not present this in the first person or name yourself. Preset the summary of the specified realm below in a factual, but stylyzed role-playing demeanor.
@@ -405,44 +366,38 @@ async function displayAiSummary(
 
 // --- Initialization ---
 async function initializePage() {
-  await loadHeaderFooter();
+  loadHeaderFooter();
 
-  const regionParam = getParam('region');
-  const urlType = getParam('urlType');
   const realmSlug = getParam('realmSlug');
+  const region = getParam('region');
+  const urlType = getParam('urlType');
+  const namespacePrefix = mapUrlTypeToApiNamespace(urlType);
 
-  if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';
+  if (!realmSlug || !region || !namespacePrefix) {
+    console.error('Missing required parameters in URL');
+    return;
+  }
 
   const token = await getAccessToken();
+  if (!token) {
+    console.error('Failed to retrieve access token');
+    return;
+  }
 
-  const apiNamespacePrefix = mapUrlTypeToApiNamespace(urlType);
   const realmDetails = await fetchRealmDetailsApi(
-    regionParam,
-    apiNamespacePrefix,
+    region,
+    namespacePrefix,
     realmSlug,
     token,
   );
 
-  renderBlizzardDetails(realmDetails, regionParam);
+  renderBlizzardDetails(realmDetails, region);
+  displayAiSummary(realmDetails, realmSlug);
 
-  // --- AI Summary Logic ---
-  if (
-    realmDetails &&
-    !realmDetails.error &&
-    realmDetails.name &&
-    realmDetails.region &&
-    realmSlug
-  ) {
-    displayAiSummary(realmDetails, realmSlug); // Initial load
-
-    if (refreshAiButton) {
-      refreshAiButton.addEventListener('click', () => {
-        displayAiSummary(realmDetails, realmSlug, true);
-      });
-    }
-  } else {
-    if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';
-    console.log('Skipping AI summary due to missing/error in realm details.');
+  if (refreshAiButton) {
+    refreshAiButton.addEventListener('click', () => {
+      displayAiSummary(realmDetails, realmSlug, true); // 👈 forceRefresh = true
+    });
   }
 }
 

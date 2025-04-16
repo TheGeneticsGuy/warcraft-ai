@@ -30,22 +30,12 @@ let currentUrlType = ''; // URL-friendly type (retail', 'classic', 'classicera')
 let selectedButton = null; // Keep track of the visually selected filter button
 
 // --- DOM Elements ---
-const icons = document.querySelectorAll('.icon-menu');
-const nav = document.querySelector('.navigation');
 const buttons = document.querySelectorAll('.filter-button'); // Realm type filter buttons
 const regionDropdown = document.querySelector('#region-select');
 const localeDropdown = document.querySelector('#locale-select');
 const realmGrid = document.querySelector('#lower_main_grid');
 const realmCountEl = document.querySelector('#num-realms');
 const realmDetailsModal = document.querySelector('#realm-details'); // For mobile modal
-
-// --- Hamburger Menu Logic ---
-icons.forEach((hamburger) => {
-  hamburger.addEventListener('click', () => {
-    nav.classList.toggle('open');
-    hamburger.classList.toggle('open');
-  });
-});
 
 // --- API Data Fetching ---
 

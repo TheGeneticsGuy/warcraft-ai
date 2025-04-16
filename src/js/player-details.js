@@ -46,7 +46,9 @@ let loadingMessageEl,
   aiSummaryContainer,
   aiSummaryText,
   aiTimestamp,
-  refreshAiButton;
+  refreshAiButton,
+  summaryDropdown,
+  deleteSummaryButton;
 
 // --- Helper Functions ---
 function showError(message) {
@@ -169,20 +171,20 @@ async function fetchPlayerData(
       mountsCollection:
         urlType !== 'classicera'
           ? fetchWithTimeout(`${baseUrl}/collections/mounts${profileParams}`, {
-              headers,
-            }).catch((e) => {
-              console.warn('Mounts fetch failed (non-critical):', e);
-              return null;
-            })
+            headers,
+          }).catch((e) => {
+            console.warn('Mounts fetch failed (non-critical):', e);
+            return null;
+          })
           : Promise.resolve(null),
       petsCollection:
         urlType !== 'classicera'
           ? fetchWithTimeout(`${baseUrl}/collections/pets${profileParams}`, {
-              headers,
-            }).catch((e) => {
-              console.warn('Pets fetch failed (non-critical):', e);
-              return null;
-            })
+            headers,
+          }).catch((e) => {
+            console.warn('Pets fetch failed (non-critical):', e);
+            return null;
+          })
           : Promise.resolve(null),
       achievementSummary: fetchWithTimeout(
         `${baseUrl}/achievements${profileParams}`,
@@ -412,13 +414,8 @@ function renderPlayerData(
 
 // --- AI Summary Functions ---
 async function fetchAiSummaryDirectly(playerData) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    console.error('Gemini API key (VITE_GEMINI_API_KEY) is not set.');
-    return 'AI summary configuration error (missing key).';
-  }
   if (!playerData) return 'Cannot generate summary without player data.';
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const API_URL = '/.netlify/functions/generateGeminiSummary';
 
   // --- Build the Prompt Conditionally ---
   let prompt = `Adopt the persona of a seasoned Azerothian chronicler recounting tales of heroes of Azeroth, of stories of great adventurers. Write a moderate summary, aiming for 4 to 5 paragraphs. Make it an engaging and flavorful summary of the adventurer known as "${playerData.name}".\n\n`;
@@ -499,7 +496,7 @@ async function fetchAiSummaryDirectly(playerData) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+        generationConfig: { temperature: 0.9, maxOutputTokens: 1024 },
       }),
     });
     if (!response.ok) {
@@ -509,7 +506,7 @@ async function fetchAiSummaryDirectly(playerData) {
       console.error('Gemini API Error Response:', errorBody);
       throw new Error(
         errorBody.error?.message ||
-          `Gemini API request failed: ${response.status}`,
+        `Gemini API request failed: ${response.status}`,
       );
     }
     const data = await response.json();
@@ -550,7 +547,6 @@ async function fetchAiSummaryDirectly(playerData) {
 }
 
 async function displayAiSummary(playerData, forceRefresh = false) {
-  // ... (Keep this function exactly as it was in the previous correct version) ...
   if (
     !aiSummaryContainer ||
     !playerData?.name ||
@@ -563,49 +559,69 @@ async function displayAiSummary(playerData, forceRefresh = false) {
     if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';
     return;
   }
-  if (!aiSummaryText || !aiTimestamp || !refreshAiButton) {
-    console.error('AI Summary DOM elements missing!');
-    return;
-  }
-  aiSummaryContainer.style.display = 'block';
-  const cacheKey = `${AI_CACHE_PREFIX}${playerData.region}-${playerData.realmSlug}-${playerData.name.toLowerCase()}`;
-  const cachedData = localStorage.getItem(cacheKey);
-  let summary = '',
-    timestamp = null;
-  if (cachedData && !forceRefresh) {
-    try {
-      const parsed = JSON.parse(cachedData);
-      summary = parsed.summary;
-      timestamp = parsed.timestamp;
-    } catch (e) {
-      console.error('Failed to parse cached AI summary', e);
-      localStorage.removeItem(cacheKey);
-    }
-  }
-  if (!summary || forceRefresh) {
+
+  const baseKey = `${AI_CACHE_PREFIX}${playerData.region}-${playerData.realmSlug}-${playerData.name.toLowerCase()}`;
+  const summaryListKey = `${baseKey}-list`;
+
+  const allSummaries = JSON.parse(localStorage.getItem(summaryListKey) || '[]');
+
+  let summaryObj = null;
+
+  // If refreshing, create a new one
+  if (forceRefresh || allSummaries.length === 0) {
     aiSummaryText.textContent = 'Generating chronicle...';
     aiTimestamp.textContent = '';
     refreshAiButton.disabled = true;
-    summary = await fetchAiSummaryDirectly(playerData); // Pass enhanced playerData
-    timestamp = new Date().toISOString();
+
+    const newText = await fetchAiSummaryDirectly(playerData);
+    const timestamp = new Date().toISOString();
+
     if (
-      !summary.startsWith('Error') &&
-      !summary.startsWith('AI summary configuration error') &&
-      !summary.startsWith('Summary generation was blocked')
+      !newText.startsWith('Error') &&
+      !newText.startsWith('AI summary configuration error') &&
+      !newText.startsWith('Summary generation was blocked')
     ) {
-      localStorage.setItem(cacheKey, JSON.stringify({ summary, timestamp }));
-    } else {
-      timestamp = null;
+      const newSummary = { text: newText.trim(), timestamp };
+      allSummaries.unshift(newSummary); // Add to top
+      localStorage.setItem(summaryListKey, JSON.stringify(allSummaries));
+      summaryObj = newSummary;
     }
+
     refreshAiButton.disabled = false;
   }
-  aiSummaryText.textContent =
-    summary || 'No chronicle available for this adventurer.';
-  if (timestamp) {
-    aiTimestamp.textContent = `Chronicle generated: ${new Date(timestamp).toLocaleString()}`;
+
+  // If not regenerating, or if generation failed, use most recent
+  if (!summaryObj && allSummaries.length > 0) {
+    summaryObj = allSummaries[0];
+  }
+
+  // Update UI
+  if (summaryObj) {
+    aiSummaryText.textContent = summaryObj.text;
+    aiTimestamp.textContent = `Chronicle generated: ${new Date(summaryObj.timestamp).toLocaleString()}`;
   } else {
+    aiSummaryText.textContent = 'No chronicle available for this adventurer.';
     aiTimestamp.textContent = '';
   }
+
+  // Populate dropdown
+  if (summaryDropdown) {
+    summaryDropdown.innerHTML = '';
+    allSummaries.forEach((s, index) => {
+      const opt = document.createElement('option');
+      opt.value = index;
+      opt.textContent = `Chronicle ${index + 1} (${new Date(s.timestamp).toLocaleString()})`;
+      summaryDropdown.appendChild(opt);
+    });
+    summaryDropdown.disabled = allSummaries.length === 0;
+  }
+
+  // Enable delete button if there’s something to delete
+  if (deleteSummaryButton) {
+    deleteSummaryButton.disabled = allSummaries.length === 0;
+  }
+
+  aiSummaryContainer.style.display = 'block';
 }
 
 // --- Initialization ---
@@ -643,6 +659,8 @@ async function initializePage() {
   aiSummaryText = document.querySelector('#ai-summary-text');
   aiTimestamp = document.querySelector('#ai-timestamp');
   refreshAiButton = document.querySelector('#refresh-ai-summary');
+  summaryDropdown = document.querySelector('#summary-select');
+  deleteSummaryButton = document.querySelector('#delete-summary');
 
   if (!errorEl || !loadingMessageEl || !contentEl) {
     console.error(
@@ -719,6 +737,43 @@ async function initializePage() {
       });
     } else {
       console.warn('Refresh AI button not found.');
+    }
+
+    if (summaryDropdown) {
+      summaryDropdown.addEventListener('change', () => {
+        const selectedIdx = parseInt(summaryDropdown.value);
+        const key = `${AI_CACHE_PREFIX}${playerDataResult.region}-${playerDataResult.realmSlug}-${playerDataResult.name.toLowerCase()}-list`;
+        const summaries = JSON.parse(localStorage.getItem(key) || '[]');
+        const selected = summaries[selectedIdx];
+        if (selected) {
+          aiSummaryText.textContent = selected.text;
+          aiTimestamp.textContent = `Chronicle generated: ${new Date(selected.timestamp).toLocaleString()}`;
+        }
+      });
+    }
+
+    if (deleteSummaryButton) {
+      deleteSummaryButton.addEventListener('click', () => {
+        const confirmed = confirm(
+          'Are you sure you want to delete this chronicle?',
+        );
+        if (!confirmed) return;
+
+        const selectedIdx = parseInt(summaryDropdown.value);
+        const key = `${AI_CACHE_PREFIX}${playerDataResult.region}-${playerDataResult.realmSlug}-${playerDataResult.name.toLowerCase()}-list`;
+        const summaries = JSON.parse(localStorage.getItem(key) || '[]');
+
+        if (summaries.length > 0) {
+          summaries.splice(selectedIdx, 1);
+          localStorage.setItem(key, JSON.stringify(summaries));
+
+          if (summaries.length === 0) {
+            displayAiSummary(playerDataResult, true); // Force new generation
+          } else {
+            displayAiSummary(playerDataResult); // Load next one
+          }
+        }
+      });
     }
   } catch (fetchError) {
     showError(`Error loading player data: ${fetchError.message}`);

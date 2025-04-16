@@ -4,6 +4,9 @@ import js from '@eslint/js';
 
 export default defineConfig([
   {
+    ignores: ['node_modules/**', '.netlify/**'], // <-- global ignore block
+  },
+  {
     files: ['**/*.{js,mjs,cjs}'], // Apply to all JS files
     languageOptions: {
       globals: {

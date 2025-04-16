@@ -343,10 +343,10 @@ async function displayAiSummary(
     : '';
   aiSummaryContainer.style.display = 'block';
 
-  populateDropdown(summaries);
+  populateDropdown(summaries, 0);
 }
 
-function populateDropdown(summaries) {
+function populateDropdown(summaries, selectedIdx = 0) {
   if (!summaryDropdown) return;
 
   summaryDropdown.innerHTML = '';
@@ -356,6 +356,8 @@ function populateDropdown(summaries) {
     option.textContent = `Summary #${index + 1} – ${new Date(entry.timestamp).toLocaleString()}`;
     summaryDropdown.appendChild(option);
   });
+
+  summaryDropdown.selectedIndex = selectedIdx;
 }
 
 // For handling deleting the summaries
@@ -461,16 +463,18 @@ async function initializePage() {
     });
   }
 
-  summaryDropdown?.addEventListener('change', () => {
-    const selectedIdx = parseInt(summaryDropdown.value);
-    const key = `aiRealmSummary-${region}-${realmSlug}-list`;
-    const summaries = JSON.parse(localStorage.getItem(key) || '[]');
-    const selected = summaries[selectedIdx];
-    if (selected) {
-      aiSummaryText.textContent = selected.text;
-      aiTimestamp.textContent = `Chronicle generated: ${new Date(selected.timestamp).toLocaleString()}`;
-    }
-  });
+  if (summaryDropdown) {
+    summaryDropdown.addEventListener('change', () => {
+      const selectedIdx = parseInt(summaryDropdown.value);
+      const key = `${AI_CACHE_PREFIX}${realmDetails.region}-${realmDetails.slug}-list`;
+      const summaries = JSON.parse(localStorage.getItem(key) || '[]');
+      const selected = summaries[selectedIdx];
+      if (selected) {
+        aiSummaryText.textContent = selected.text;
+        aiTimestamp.textContent = `Summary generated: ${new Date(selected.timestamp).toLocaleString()}`;
+      }
+    });
+  }
 
   deleteSummaryButton?.addEventListener('click', () => {
     modal?.setAttribute('aria-hidden', 'false');
@@ -508,7 +512,6 @@ async function initializePage() {
       }
     }
   });
-
 }
 
 document.addEventListener('DOMContentLoaded', initializePage);

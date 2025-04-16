@@ -169,7 +169,7 @@ h2 {
 }
 
 /* Note below AI summary */
-#ai-summary-container>p {
+#ai-summary-container > p {
   font-size: 0.85rem;
   color: var(--ai-note-color);
   margin-top: var(--spacing-xl);

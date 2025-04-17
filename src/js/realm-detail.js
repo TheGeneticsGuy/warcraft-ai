@@ -199,37 +199,65 @@ function renderBlizzardDetails(realm, regionParam) {
 async function fetchAiSummaryDirectly(realmDetails) {
   const realmName = realmDetails.name || 'this realm';
   const region = realmDetails.region || 'its region';
-  const realmType = realmDetails.type || 'unknown type';
+  const rawRealmType = realmDetails.type || 'unknown type';
   const category = realmDetails.category || 'standard';
+
+  let descriptiveRealmType = rawRealmType;
+  let gameplayFocus = 'mixed'; // Default assumption
+
+  switch (rawRealmType.toLowerCase()) {
+    case 'normal':
+      descriptiveRealmType = 'Normal (PvE Focus)';
+      gameplayFocus = 'PvE';
+      break;
+    case 'pve':
+      descriptiveRealmType = 'PvE';
+      gameplayFocus = 'PvE';
+      break;
+    case 'pvp':
+      descriptiveRealmType = 'PvP';
+      gameplayFocus = 'PvP';
+      break;
+    case 'rp':
+      descriptiveRealmType = 'RP';
+      gameplayFocus = 'Roleplaying';
+      break;
+    case 'rppvp':
+      descriptiveRealmType = 'RPPvP';
+      gameplayFocus = 'Roleplaying with PVP';
+      break;
+    default:
+      // Keep the original type if it's something unexpected
+      descriptiveRealmType = `${rawRealmType} (Unknown Ruleset)`;
+      gameplayFocus = `an unclear focus based on type '${rawRealmType}'`;
+      break;
+  }
 
   const API_URL = '/.netlify/functions/generateGeminiSummary';
 
   const prompt = `
-Adopt the persona of a knowledgeable and eloquent Azerothian chronicler or historian, recounting tales of Azeroth, of stories of great adventurers... Do not reference anything indicating the digital nature of the game or the world. Do not present this in the first person or name yourself. Preset the summary of the specified realm below in a factual, but stylyzed role-playing demeanor.
+Adopt the persona of a knowledgeable and eloquent Azerothian chronicler or historian, recounting tales of Azeroth, of stories of great adventurers... Do not reference anything indicating the digital nature of the game or the world. Do not present this in the first person or name yourself. Present the summary of the specified realm below in a factual, but stylized role-playing demeanor.
 Your task is to generate a detailed historical summary (approximately 2-3 paragraphs) for the World of Warcraft realm specified below.
 
 **Realm Details Provided:**
 *   **Realm Name:** ${realmName}
 *   **Region:** ${region}
-*   **Realm Type:** ${realmType} (${category})  // e.g., Normal (PvE), PvP, RP (Roleplaying)
-
-if the realm type is normal, then identify it as a PVE realm, not a "normal" realm.
+*   **Realm Type:** ${descriptiveRealmType} // Example: Normal (PvE Focus), PvP (Player vs. Player Focus), RP (Roleplaying - PvE Ruleset)
+*   **Game Category:** ${category} // Example: World of Warcraft, WoW Classic
 
 **Instructions for the Chronicler:**
 
-1.  **Focus:** Craft a narrative history centered *specifically* on the "${realmName}" (${region}) realm.
-2.  **Origin:** Discuss its origins. Based on your training data, mention the *general time period* or *expansion context* when "${realmName}" likely launched (e.g., "one of the original launch realms," "established during the original Vanilla Era, or during the Burning Crusade era," or WOTLK, or when the Cataclysm happened and so on. Do NOT state a specific month or year unless it is verifiable public knowledge for *this specific realm*. Avoid guessing or speculating on exact dates.** It is ok to be in the ballpark, but try to use events or seasons, like fall, spring, or "during the original Vanilla Classic game" or "One of the original first servers" and so on.
-3.  **Realm Type Influence:** Explain how its designation as a **"${realmType}"** shapes its culture in the world of Azeroth
-4.  **Notable History & Community:** Weave in any *widely known and verifiable* historical events, significant server-first achievements, renowned *long-standing guilds specifically associated with "${realmName}" or its connected group*, or famous player figures *if* your training data strongly supports their connection to *this specific realm*.
-5.  **Famous Guilds - IMPORTANT CAVEAT:** Mention globally famous competitive guilds (like Liquid, Echo, Method, etc.) **ONLY IF** your training data strongly and accurately indicates they had a significant, well-documented historical presence, origin, or major achievement *directly tied to "${realmName}" or its specific connected realms*. **If there is no such direct, verifiable connection, DO NOT mention these famous guilds at all, not even to state they aren't present.** Focus on the realm's own history.
+1.  **Focus:** Craft a narrative history centered *specifically* on the "${realmName}" (${region}) realm within the context of the ${category} game version.
+2.  **Origin:** Discuss its origins. Based on your training data, mention the *general time period* or *expansion context* when "${realmName}" likely launched (e.g., "one of the original launch realms," "established during the Burning Crusade era," "emerged during the Cataclysm"). Do NOT state a specific month or year unless verifiable public knowledge for *this specific realm*. Avoid guessing exact dates. Using general eras or major events is preferred.
+3.  **Realm Type Influence & Gameplay Focus:** This is crucial. Explain how its designation as a **"${descriptiveRealmType}"** realm shapes its culture and the typical experiences of its inhabitants. If the gameplayer focus has to do with RP, or roleplaying, as shown here, ${gameplayFocus}, then describe what this means for adventurers on that realm and how it affects them. Be sure to never say similar descriptions like "Player Versus Environment" or "Player versus Player". Stick to just using the acronyms like PVE or PVP, when referencing the realm type or gameplay focus. The only exception is RP you can say the full thing as Roleplaying.
+4.  **Notable History & Community:** Weave in any *widely known and verifiable* historical events, significant server-first achievements (relevant to the ${category}), renowned *long-standing guilds specifically associated with "${realmName}" or its connected group*, or famous player figures *if* your training data strongly supports their connection to *this specific realm*.
+5.  **Famous Guilds - IMPORTANT CAVEAT:** Mention globally famous competitive guilds (like Liquid, Echo, Method, etc.) **ONLY IF** your training data strongly and accurately indicates they had a significant, well-documented historical presence, origin, or major achievement *directly tied to "${realmName}" or its specific connected realms*. **If there is no such direct, verifiable connection, DO NOT mention these famous guilds at all.** Focus on the realm's *own* history.
 6.  **Tone & Style:** Write with narrative flair, evocative language, and the authority of an Azerothian historian. Maintain factual accuracy based on the provided details and your general knowledge base.
 7.  **Handling Scarcity:** If significant historical details or notable events specific to "${realmName}" are scarce in your training data, acknowledge this humbly (e.g., "While specific chronicles are sparse...") rather than fabricating information. Prioritize accuracy and relevance to the provided realm details.
-8. **Length:** Aim for 2-3 informative paragraphs. Either amount is appropriate. As long is it is informative and useful. You do not have to include every single aspect mentioned here, if it seems like maybe it is not relevant. Use your judgement on what to share based on this prompt. Weave these details (or lack thereof, omitting gracefully if details are sparse or insignificant) into a compelling narrative fitting the Warcraft universe. End with a sentence that sparks curiosity about the server's past exploits or future adventures. Avoid clichés like "gather 'round'", or "From the dusty tomes" and so on. Be unique in your approach to this.
+8.  **Length:** Aim for 2-3 informative paragraphs. Weave these details (or lack thereof) into a compelling narrative fitting the Warcraft universe. End with a sentence that sparks curiosity about the server's past exploits or future adventures. Avoid clichés like "gather 'round'", or "From the dusty tomes".
 
 Begin your chronicle now for "${realmName}" (${region}).
 `;
-
-  console.log(`[AI Prompt] ${prompt}`);
 
   try {
     const response = await fetch(API_URL, {
@@ -237,7 +265,7 @@ Begin your chronicle now for "${realmName}" (${region}).
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 1.2, maxOutputTokens: 1024 },
+        generationConfig: { temperature: 0.8, maxOutputTokens: 1024 },
       }),
     });
 
@@ -248,7 +276,7 @@ Begin your chronicle now for "${realmName}" (${region}).
       console.error('Gemini API Error Response:', errorBody);
       throw new Error(
         errorBody.error?.message ||
-          `Gemini API request failed: ${response.status}`,
+        `Gemini API request failed: ${response.status}`,
       );
     }
 

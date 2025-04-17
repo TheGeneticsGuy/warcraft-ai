@@ -1,6 +1,6 @@
 # Warcraft AI Reporter
 
-[![Warcraft AI Reporter](https://i.imgur.com/hp9StIT.jpeg)](www.azerothreporter.com)
+[![Warcraft AI Reporter](https://i.imgur.com/hp9StIT.jpeg)](https://www.azerothreporter.com)
 _Click the image to navigate to the live deployed website on Netlify!_
 
 ## Class Details

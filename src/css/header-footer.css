@@ -163,3 +163,13 @@ main {
     font-size: 1.8rem;
   }
 }
+
+#main-footer a.footer-link {
+  font-weight: normal;
+  text-decoration: none;
+  transition: text-decoration 0.2s ease;
+}
+
+#main-footer a.footer-link:hover {
+  text-decoration: underline;
+}

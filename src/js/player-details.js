@@ -9,13 +9,7 @@ import { getAccessToken } from './blizzAPI.js';
 
 // --- Constants ---
 const AI_CACHE_PREFIX = 'aiPlayerSummary-';
-const API_REQUEST_TIMEOUT = 10000;
-
-// For the AI Prompts
-const ilvlThreshold = 500; // Only note the iLvl of the player in summary if 500 or higher iLvl as per expansion
-const achievementThreshold = 20000; // Achievement points only note if > 20000
-const mountThreshold = 400;
-const petThreshold = 800;
+const API_REQUEST_TIMEOUT = 10000; // For Blizzard API, AI timeout is handled by Netlify/Gemini
 
 // --- Declare DOM Element Variables (assigned IN initializePage) ---
 let loadingMessageEl,
@@ -51,6 +45,7 @@ let loadingMessageEl,
   deleteSummaryButton;
 
 // --- Helper Functions ---
+// ... (showError, hideError, showContent, fetchWithTimeout remain the same) ...
 function showError(message) {
   console.log('showError called. errorEl is:', errorEl);
   if (errorEl) {
@@ -127,6 +122,8 @@ async function fetchWithTimeout(
 }
 
 // --- API Data Fetching ---
+// fetchPlayerData remains IDENTICAL to your version that fetches guild rank and member count
+// Make sure this function correctly returns all fields needed by the server-side prompt builder
 async function fetchPlayerData(
   region,
   urlType,
@@ -139,28 +136,20 @@ async function fetchPlayerData(
     throw new Error(`Unsupported game version type: ${urlType}`);
   }
   const fullProfileNamespace = `${profileNamespacePrefix}-${region}`;
-  // NOTE: Guild roster uses 'profile' namespace too, like the realms page, but it's constructed slightly differently.
   const locale = 'en_US';
 
   const baseUrl = `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${characterName.toLowerCase()}`;
   const headers = { Authorization: `Bearer ${token}` };
   const profileParams = `?namespace=${fullProfileNamespace}&locale=${locale}`;
 
-  console.log(
-    `Fetching data for: ${characterName}@${realmSlug} [${region}, ${urlType}]`,
-  );
-
   try {
-    // --- Stage 1: Fetch Basic Profile First (needed for guild info) ---
     const basicProfile = await fetchWithTimeout(`${baseUrl}${profileParams}`, {
       headers,
     });
     if (!basicProfile) {
       throw new Error('Failed to fetch basic character profile.');
     }
-    console.log('Basic Profile Data:', basicProfile);
 
-    // --- Stage 2: Prepare Conditional Fetches ---
     const promisesToAwait = {
       media: fetchWithTimeout(`${baseUrl}/character-media${profileParams}`, {
         headers,
@@ -193,39 +182,48 @@ async function fetchPlayerData(
         console.error('Achievements fetch error details:', e);
         return null;
       }),
-      guildRoster: null, // Initialize guildRoster promise
+      guildRoster: null,
     };
+
+    let guildInfo = null;
 
     if (basicProfile.guild) {
       const guildNameSlug = slugify(basicProfile.guild.name);
-      const guildRealmSlug = basicProfile.guild.realm.slug; // Use the realm slug from the character's guild data
-      const guildNamespace = `profile-${region}`; // Guild API uses profile namespace
+      const guildRealmSlug = basicProfile.guild.realm.slug;
+      const guildNamespace = `profile-${region}`;
       const guildRosterUrl = `https://${region}.api.blizzard.com/data/wow/guild/${guildRealmSlug}/${guildNameSlug}/roster?namespace=${guildNamespace}&locale=${locale}`;
+
+      guildInfo = {
+        name: basicProfile.guild.name,
+        realmSlug: guildRealmSlug,
+        nameSlug: guildNameSlug,
+      };
+
       promisesToAwait.guildRoster = fetchWithTimeout(guildRosterUrl, {
         headers,
       }).catch((e) => {
-        console.error('Guild Roster fetch error details:', e);
+        console.error(
+          `Guild Roster fetch failed for ${guildInfo.name} on ${guildInfo.realmSlug}:`,
+          e.message,
+        );
         return null;
       });
     } else {
-      promisesToAwait.guildRoster = Promise.resolve(null); // Resolve immediately if no guild
+      promisesToAwait.guildRoster = Promise.resolve(null);
     }
 
-    // --- Stage 3: Await all remaining fetches ---
     const results = await Promise.all(Object.values(promisesToAwait));
     const [
       media,
       mountsCollection,
       petsCollection,
       achievementSummary,
-      guildRoster, // Will be null if no guild or fetch failed
-    ] = results; // Order matches Object.values(promisesToAwait)
+      guildRoster,
+    ] = results;
 
-    // --- Stage 4: Process Data ---
     const averageItemLevel = basicProfile.average_item_level ?? null;
-    const characterAchievementPoints = basicProfile.achievement_points ?? null; // Character specific points
+    const characterAchievementPoints = basicProfile.achievement_points ?? null;
 
-    // Calculate unique pet count (not total as that is less useful)
     let uniquePetCount = null;
     if (petsCollection?.pets && Array.isArray(petsCollection.pets)) {
       const uniqueSpeciesIds = new Set(
@@ -238,14 +236,16 @@ async function fetchPlayerData(
       uniquePetCount = 0;
     }
 
-    // Mount count
     const mountCount =
       mountsCollection?.mounts?.length ??
       (mountsCollection === null && urlType !== 'classicera' ? null : 0);
 
-    // Find Guild Rank
     let guildRank = null;
-    if (guildRoster?.members) {
+    let guildMemberCount = null;
+
+    if (guildRoster?.members && Array.isArray(guildRoster.members)) {
+      guildMemberCount = guildRoster.members.length;
+
       const memberInfo = guildRoster.members.find(
         (member) =>
           member.character.id === basicProfile.id &&
@@ -254,75 +254,81 @@ async function fetchPlayerData(
       if (memberInfo) {
         guildRank = memberInfo.rank;
       } else {
-        // console.warn("Character not found in fetched guild roster.");
+        console.warn(
+          `Character ${basicProfile.name} (ID: ${basicProfile.id}) not found in fetched roster for guild ${guildInfo?.name || 'unknown'}.`,
+        );
       }
+    } else if (guildInfo && guildRoster === null) {
+      console.warn(
+        `Could not retrieve roster details for guild ${guildInfo.name}. Rank and member count unknown.`,
+      );
     }
 
-    // Check for specific PvP Achievements
     let has100kHKs = false;
     let has250kHKs = false;
     let isBattlemaster = false;
     if (achievementSummary?.achievements) {
       const completedAchieveIds = new Set(
         achievementSummary.achievements
-          .filter((ach) => ach.completed_timestamp) // Only completed achievements
+          .filter((ach) => ach.completed_timestamp)
           .map((ach) => ach.id),
       );
-      // Let's check some cool PVP achievements!!! Achievement IDs confiremd wowhead.com
-      has250kHKs = completedAchieveIds.has(2336); // 250,000 Honorable Kills ID
-      has100kHKs = completedAchieveIds.has(583); // 100,000 Honorable Kills ID (only relevant if 250k is false)
-      isBattlemaster = completedAchieveIds.has(783); // Battlemaster ID
+      has250kHKs = completedAchieveIds.has(2336);
+      has100kHKs = completedAchieveIds.has(583);
+      isBattlemaster = completedAchieveIds.has(783);
     }
 
     const playerData = {
       name: basicProfile.name,
-      id: basicProfile.id,
+      id: basicProfile.id, // Keep ID for potential future use, maybe cache keys?
       level: basicProfile.level,
       race: getPrimaryName(basicProfile.race.name),
-      class: getPrimaryName(basicProfile.character_class.name),
+      // Send the class name expected by the prompt builder
+      character_class: getPrimaryName(basicProfile.character_class.name),
       faction: getPrimaryName(basicProfile.faction.name),
       gender: getPrimaryName(basicProfile.gender.name),
       realm: getPrimaryName(basicProfile.realm.name),
-      realmSlug: basicProfile.realm.slug,
-      region: region.toUpperCase(),
+      realmSlug: basicProfile.realm.slug, // Keep for cache keys
+      region: region.toUpperCase(), // Keep for cache keys / display
       title:
         basicProfile.active_title?.display_string.replace(
           '{name}',
           basicProfile.name,
         ) || null,
-      guild: basicProfile.guild?.name || null, // Store name, rank is separate
-      guildRank: guildRank, // Store the rank (number or null)
+      guild: guildInfo?.name || null,
+      guildRank: guildRank,
+      guildMemberCount: guildMemberCount, // Send count
       averageItemLevel: averageItemLevel,
-      achievementPoints: characterAchievementPoints, // Using character-specific for now
+      achievementPoints: characterAchievementPoints,
       mountsCollected: mountCount,
       petsCollected: uniquePetCount,
+      // Still needed for display
       avatarUrl:
         media?.assets?.find((a) => a.key === 'avatar')?.value ||
         media?.assets?.find((a) => a.key === 'inset')?.value ||
         media?.assets?.find((a) => a.key === 'main')?.value ||
         null,
-      urlType: urlType,
+      urlType: urlType, // Still needed for display logic
       gameVersionDisplay:
         urlType === 'retail'
           ? 'Retail'
           : urlType === 'classic'
             ? 'Cataclysm'
             : 'Classic Era',
-      // Add PvP achievement flags
       has100kHKs: has100kHKs,
       has250kHKs: has250kHKs,
       isBattlemaster: isBattlemaster,
     };
 
-    console.log('Processed Player Data:', playerData);
-    return playerData; // Return only the processed player data object
+    return playerData;
   } catch (error) {
     console.error('Error during player data fetching/processing:', error);
-    throw error; // Re-throw to be caught by initializePage
+    throw error;
   }
 }
 
 // --- UI Rendering ---
+// renderPlayerData remains IDENTICAL - it only uses data for display
 function renderPlayerData(
   playerData,
   regionParam,
@@ -361,10 +367,11 @@ function renderPlayerData(
     return;
   }
   document.title = `${playerData.name} | Player Details`;
-  nameTitleEl.textContent = `${playerData.name} - ${playerData.level} ${playerData.race} ${playerData.class}`;
+  // Use character_class here if that's the property name you settled on in playerData
+  nameTitleEl.textContent = `${playerData.name} - ${playerData.level} ${playerData.race} ${playerData.character_class}`;
   levelEl.textContent = playerData.level ?? 'N/A';
   raceEl.textContent = playerData.race ?? 'N/A';
-  classEl.textContent = playerData.class ?? 'N/A';
+  classEl.textContent = playerData.character_class ?? 'N/A'; // Update if needed
   genderEl.textContent = playerData.gender ?? 'N/A';
   realmEl.textContent = playerData.realm ?? realmSlugParam;
   regionEl.textContent = regionParam.toUpperCase();
@@ -398,6 +405,9 @@ function renderPlayerData(
     if (value !== null && value !== undefined && sectionEl && valueEl) {
       valueEl.textContent = value.toLocaleString();
       sectionEl.classList.add('visible');
+    } else if (sectionEl) {
+      // Ensure section is hidden if value is null/undefined
+      sectionEl.classList.remove('visible');
     }
   }
   renderOptional(ilvlSection, ilvlEl, playerData.averageItemLevel);
@@ -413,127 +423,82 @@ function renderPlayerData(
 }
 
 // --- AI Summary Functions ---
+// SIMPLIFIED: Sends data to server, handles response
 async function fetchAiSummaryDirectly(playerData) {
   if (!playerData) return 'Cannot generate summary without player data.';
-  const API_URL = '/.netlify/functions/generateGeminiSummary';
 
-  // --- Build the Prompt Conditionally ---
-  let prompt = `Adopt the persona of a seasoned Azerothian chronicler recounting tales of heroes of Azeroth, of stories of great adventurers. Write a moderate summary, aiming for 4 to 5 paragraphs. Make it an engaging and flavorful summary of the adventurer known as "${playerData.name}".\n\n`;
-  prompt += `This ${playerData.race} ${playerData.class} of level ${playerData.level} hails from the ${playerData.realm} realm in the ${playerData.region} region and fights for the ${playerData.faction}. In your summary, act as if you do not know if the player is male or female.`;
-
-  if (playerData.title) {
-    prompt += ` They currently bear the title "${playerData.title}".`;
-  }
-
-  if (playerData.guild && playerData.guildRank === 0) {
-    // Check rank 0 for GM
-    prompt += ` They stand as a pillar of their community, leading the guild "${playerData.guild}" as Guild Master.`;
-  } else if (
-    playerData.guild &&
-    (playerData.guildRank === 1 || playerData.guildRank === 2)
-  ) {
-    // Check ranks 1 or 2 for Officer
-    prompt += ` Within the guild "${playerData.guild}", they hold a position of authority as an Officer.`;
-  } else if (playerData.guild) {
-    prompt += ` They are a member of the guild "${playerData.guild}".`;
-  } else {
-    prompt += ` They currently wander Azeroth unaffiliated with a guild.`;
-  }
-
-  // Combat Prowess (Only mention if significant)
-  if (
-    playerData.averageItemLevel &&
-    playerData.averageItemLevel >= ilvlThreshold
-  ) {
-    prompt += ` Their prowess in combat is reflected in their formidable average equipment power of ${playerData.averageItemLevel}.`;
-  }
-
-  // Achievements (Points & Specific PvP)
-
-  if (playerData.isBattlemaster) {
-    prompt += ` Known across the battlegrounds of Azeroth, they have earned the prestigious and hard-won title of Battlemaster.`;
-  }
-  // Only mentions 100k if they don't have 250k
-  if (playerData.has250kHKs) {
-    prompt += ` Their prowess in the theater of war is undeniable, having claimed over 250,000 honorable kills against foes of the opposing faction.`;
-  } else if (playerData.has100kHKs) {
-    prompt += ` A veteran of countless skirmishes, they have amassed over 100,000 honorable kills in service to their faction.`;
-  }
-  if (
-    playerData.achievementPoints &&
-    playerData.achievementPoints >= achievementThreshold
-  ) {
-    prompt += ` Their long list of deeds across the world has earned them a significant ${playerData.achievementPoints.toLocaleString()} achievement points.`;
-  }
-
-  // Collections
-  const mentionMounts =
-    playerData.mountsCollected !== null &&
-    playerData.mountsCollected >= mountThreshold;
-  const mentionPets =
-    playerData.petsCollected !== null &&
-    playerData.petsCollected >= petThreshold;
-  if (mentionMounts || mentionPets) {
-    prompt += ` Their dedication extends to collecting the wonders of Azeroth; their stables and menagerie are noteworthy, containing`;
-    if (mentionMounts) {
-      prompt += ` around ${playerData.mountsCollected.toLocaleString()} mounts`;
-      if (mentionPets) prompt += ` and`;
-    }
-    if (mentionPets) {
-      prompt += ` roughly ${playerData.petsCollected.toLocaleString()} unique companion pets`;
-    }
-    prompt += `.`;
-  }
-
-  prompt += `\n\nWeave these details (or lack thereof, omitting gracefully if details are sparse or insignificant) into a compelling narrative fitting the Warcraft universe. You do not need to use the exact sentences as I used above, it is merely to provide useful information for your narrative summary of the character. Mention their game version context (${playerData.gameVersionDisplay}) if they are playing on a Classic or Classic Era server. Do not mention this gameversion detail if they are on retail. Focus on making them sound like a notable figure or hero of Azeroth that stands for a righteous cause of not just their own faction, but of the people of Azeroth. End with a sentence that sparks curiosity about their past exploits or future adventures. Avoid clichés like "gather 'round".`;
-
-  console.log('AI Prompt:', prompt);
+  const API_URL = '/.netlify/functions/generateGeminiSummary'; // Your function endpoint
 
   try {
-    // Error protection generated by Gemini 2.5 to assist in their own prompt gen
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.9, maxOutputTokens: 1024 },
-      }),
+      // *** Send ONLY the playerData object ***
+      body: JSON.stringify({ playerData: playerData }),
     });
+
+    const data = await response.json(); // Always parse JSON response
+
     if (!response.ok) {
-      const errorBody = await response
-        .json()
-        .catch(() => ({ error: { message: `HTTP error ${response.status}` } }));
-      console.error('Gemini API Error Response:', errorBody);
+      // Handle errors reported by the Netlify function / Gemini
+      console.error('AI Server Error Response:', data);
       throw new Error(
-        errorBody.error?.message ||
-          `Gemini API request failed: ${response.status}`,
+        data.error || `AI service request failed: ${response.status}`,
       );
     }
-    const data = await response.json();
+
+    // --- Process SUCCESSFUL response from Gemini (forwarded by Netlify) ---
+
+    // Check for content blocking (using structure returned by Gemini via your function)
     if (data.promptFeedback?.blockReason) {
       console.warn(
-        'AI content blocked:',
+        'AI content blocked (prompt):',
         data.promptFeedback.blockReason,
         data.promptFeedback.safetyRatings,
       );
-      return `Summary generation was blocked due to: ${data.promptFeedback.blockReason}. Please adjust the content or try again.`;
+      return `Summary generation was blocked (prompt issue): ${data.promptFeedback.blockReason}.`;
     }
-    const finishReason = data.candidates?.[0]?.finishReason;
-    if (finishReason === 'MAX_TOKENS') {
-      console.warn(`AI response truncated because MAX_TOKENS was reached.`);
+
+    const candidate = data.candidates?.[0];
+    if (!candidate) {
+      console.warn('No candidate returned from AI.', data);
+      return 'The AI chronicler seems to be unavailable or speechless.';
     }
+
+    const finishReason = candidate.finishReason;
+    const safetyRatings = candidate.safetyRatings;
+
     if (finishReason === 'SAFETY') {
       console.warn(
-        'AI content blocked due to safety during generation:',
-        data.candidates[0].safetyRatings,
+        'AI content blocked (generation):',
+        finishReason,
+        safetyRatings,
       );
-      return `Summary generation was blocked for safety reasons.`;
+      return `Summary generation was blocked for safety reasons during writing.`;
     }
-    const summaryText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (finishReason === 'RECITATION') {
+      console.warn(
+        'AI content generation stopped due to recitation:',
+        safetyRatings,
+      );
+      return `Summary generation stopped: Resembled existing sources too closely.`;
+    }
+    if (finishReason === 'OTHER') {
+      console.warn(
+        'AI content generation stopped for other reasons:',
+        safetyRatings,
+      );
+      return `The chronicle writing stopped unexpectedly.`;
+    }
+
+    const summaryText = candidate.content?.parts?.[0]?.text;
+
     if (summaryText) {
       let finalText = summaryText.trim();
       if (finishReason === 'MAX_TOKENS') {
-        finalText += '\n\n[...Chronicle truncated due to length limit.]';
+        console.warn(`AI response truncated because MAX_TOKENS was reached.`);
+        finalText +=
+          '\n\n*[...The chronicle trails off, limited by the constraints of this telling...]*';
       }
       return finalText;
     } else {
@@ -541,11 +506,20 @@ async function fetchAiSummaryDirectly(playerData) {
       return 'Could not parse AI summary from the response.';
     }
   } catch (error) {
-    console.error('Error fetching AI summary directly:', error);
-    return `Error generating summary: ${error.message.includes('API key not valid') ? 'Invalid API Key' : error.message}`;
+    console.error('Error fetching AI summary from server:', error);
+    // Make error message slightly more user-friendly
+    let displayError = `Error generating summary: ${error.message}`;
+    if (error.message.includes('Failed to fetch')) {
+      displayError = 'Error: Could not connect to the AI summary service.';
+    } else if (error.message.includes('AI service request failed')) {
+      displayError = `Error: The AI summary service reported an issue (${error.message.split(': ')[1] || 'Unknown'}).`;
+    }
+    return displayError;
   }
 }
 
+// displayAiSummary remains mostly the same, but relies on the simplified fetchAiSummaryDirectly
+// Ensure cache keys use the same player data fields as before
 async function displayAiSummary(playerData, forceRefresh = false) {
   if (
     !aiSummaryContainer ||
@@ -560,63 +534,106 @@ async function displayAiSummary(playerData, forceRefresh = false) {
     return;
   }
 
+  // Use consistent fields for the cache key
   const baseKey = `${AI_CACHE_PREFIX}${playerData.region}-${playerData.realmSlug}-${playerData.name.toLowerCase()}`;
   const summaryListKey = `${baseKey}-list`;
 
-  const allSummaries = JSON.parse(localStorage.getItem(summaryListKey) || '[]');
+  let allSummaries = [];
+  try {
+    allSummaries = JSON.parse(localStorage.getItem(summaryListKey) || '[]');
+    if (!Array.isArray(allSummaries)) allSummaries = []; // Handle corrupt cache data
+  } catch (e) {
+    console.error('Error reading summary cache:', e);
+    localStorage.removeItem(summaryListKey); // Clear corrupt cache
+    allSummaries = [];
+  }
 
   let summaryObj = null;
 
-  // If refreshing, create a new one
   if (forceRefresh || allSummaries.length === 0) {
     aiSummaryText.textContent = 'Generating chronicle...';
     aiTimestamp.textContent = '';
     refreshAiButton.disabled = true;
+    summaryDropdown.disabled = true;
+    deleteSummaryButton.disabled = true;
 
+    // Call the *simplified* function which now talks to your Netlify function
     const newText = await fetchAiSummaryDirectly(playerData);
     const timestamp = new Date().toISOString();
 
-    if (
-      !newText.startsWith('Error') &&
-      !newText.startsWith('AI summary configuration error') &&
-      !newText.startsWith('Summary generation was blocked')
-    ) {
+    // Check if the result indicates an error before caching/displaying
+    const isErrorResult =
+      newText.startsWith('Error:') ||
+      newText.startsWith('Summary generation was blocked') ||
+      newText.startsWith('The AI chronicler seems') ||
+      newText.startsWith('Could not parse') ||
+      newText.startsWith('Summary generation stopped');
+
+    if (isErrorResult) {
+      // Display the error message directly
+      aiSummaryText.textContent = newText;
+      aiTimestamp.textContent = 'Generation failed.';
+      summaryObj = null; // Ensure we don't try to use an old summary
+    } else {
+      // Success - Cache and prepare to display
       const newSummary = { text: newText.trim(), timestamp };
-      allSummaries.unshift(newSummary); // Add to top
-      localStorage.setItem(summaryListKey, JSON.stringify(allSummaries));
-      summaryObj = newSummary;
+      allSummaries.unshift(newSummary); // Add new valid summary to top
+      try {
+        localStorage.setItem(summaryListKey, JSON.stringify(allSummaries));
+      } catch (e) {
+        console.error('Error writing summary cache:', e);
+        // Potentially handle quota exceeded errors here if needed
+      }
+      summaryObj = newSummary; // Use the newly generated summary
     }
 
-    refreshAiButton.disabled = false;
+    refreshAiButton.disabled = false; // Re-enable button after attempt
   }
 
-  // If not regenerating, or if generation failed, use most recent
+  // If not regenerating, or if regeneration failed BUT there are old ones, use most recent *valid* one
   if (!summaryObj && allSummaries.length > 0) {
-    summaryObj = allSummaries[0];
+    summaryObj = allSummaries[0]; // Load the most recent from cache
   }
 
-  // Update UI
+  // Update UI based on whether we have a valid summaryObj
   if (summaryObj) {
     aiSummaryText.textContent = summaryObj.text;
     aiTimestamp.textContent = `Chronicle generated: ${new Date(summaryObj.timestamp).toLocaleString()}`;
-  } else {
+    summaryDropdown.disabled = false;
+    deleteSummaryButton.disabled = false;
+  } else if (!forceRefresh && allSummaries.length === 0) {
+    // Only show "No chronicle" if not actively trying to refresh and cache is empty
     aiSummaryText.textContent = 'No chronicle available for this adventurer.';
     aiTimestamp.textContent = '';
+    summaryDropdown.disabled = true;
+    deleteSummaryButton.disabled = true;
   }
+  // If forceRefresh failed, the error message is already displayed
 
-  // Populate dropdown
+  // Populate dropdown (even if refresh failed, show old ones)
   if (summaryDropdown) {
-    summaryDropdown.innerHTML = '';
-    allSummaries.forEach((s, index) => {
+    summaryDropdown.innerHTML = ''; // Clear existing options
+    if (allSummaries.length > 0) {
+      allSummaries.forEach((s, index) => {
+        const opt = document.createElement('option');
+        opt.value = index;
+        // Select the first option (most recent) by default
+        if (index === 0) opt.selected = true;
+        opt.textContent = `Chronicle ${index + 1} (${new Date(s.timestamp).toLocaleString()})`;
+        summaryDropdown.appendChild(opt);
+      });
+      summaryDropdown.disabled = false;
+    } else {
+      // Add a placeholder if empty
       const opt = document.createElement('option');
-      opt.value = index;
-      opt.textContent = `Chronicle ${index + 1} (${new Date(s.timestamp).toLocaleString()})`;
+      opt.textContent = 'No saved chronicles';
+      opt.disabled = true;
       summaryDropdown.appendChild(opt);
-    });
-    summaryDropdown.disabled = allSummaries.length === 0;
+      summaryDropdown.disabled = true;
+    }
   }
 
-  // Enable delete button if there’s something to delete
+  // Enable delete button if there are summaries to delete
   if (deleteSummaryButton) {
     deleteSummaryButton.disabled = allSummaries.length === 0;
   }
@@ -625,7 +642,7 @@ async function displayAiSummary(playerData, forceRefresh = false) {
 }
 
 // --- Initialization ---
-// --- MODIFIED initializePage to pass full result to displayAiSummary ---
+// initializePage remains mostly the same, just calls the updated functions
 async function initializePage() {
   await loadHeaderFooter();
 
@@ -669,6 +686,7 @@ async function initializePage() {
     alert('A critical error occurred loading page components.');
     return;
   }
+  // Warning for optional elements is fine
   if (
     !ilvlSection ||
     !ilvlEl ||
@@ -677,9 +695,17 @@ async function initializePage() {
     !mountsSection ||
     !mountsEl ||
     !petsSection ||
-    !petsEl
+    !petsEl ||
+    !aiSummaryContainer ||
+    !aiSummaryText ||
+    !aiTimestamp ||
+    !refreshAiButton ||
+    !summaryDropdown ||
+    !deleteSummaryButton
   ) {
-    console.warn('One or more optional detail DOM elements were not found.');
+    console.warn(
+      'One or more optional detail or AI control DOM elements were not found.',
+    );
   }
 
   const region = getParam('region');
@@ -705,25 +731,36 @@ async function initializePage() {
     return;
   }
 
-  function handleDeleteSummary(playerDataResult) {
+  // Moved handleDeleteSummary definition earlier for clarity
+  function handleDeleteSummary(playerDataForCacheKey) {
+    if (!playerDataForCacheKey) {
+      console.error('Cannot delete summary, player data missing.');
+      return;
+    }
     const selectedIdx = parseInt(summaryDropdown.value);
-    const key = `${AI_CACHE_PREFIX}${playerDataResult.region}-${playerDataResult.realmSlug}-${playerDataResult.name.toLowerCase()}-list`;
+    // Use same key logic as displayAiSummary
+    const key = `${AI_CACHE_PREFIX}${playerDataForCacheKey.region}-${playerDataForCacheKey.realmSlug}-${playerDataForCacheKey.name.toLowerCase()}-list`;
     const summaries = JSON.parse(localStorage.getItem(key) || '[]');
 
-    if (summaries.length > 0) {
-      summaries.splice(selectedIdx, 1);
+    if (
+      summaries.length > 0 &&
+      selectedIdx >= 0 &&
+      selectedIdx < summaries.length
+    ) {
+      summaries.splice(selectedIdx, 1); // Remove the selected summary
       localStorage.setItem(key, JSON.stringify(summaries));
 
-      if (summaries.length === 0) {
-        displayAiSummary(playerDataResult, true); // Force new generation
-      } else {
-        displayAiSummary(playerDataResult); // Load most recent
-      }
+      // After deleting, refresh the display to show the new latest summary or empty state
+      // Pass the original playerData object which is still valid for cache keys etc.
+      displayAiSummary(playerDataForCacheKey, false); // false = don't force regen, just reload cache
+    } else {
+      console.warn(
+        'Could not delete summary - index out of bounds or no summaries exist.',
+      );
     }
   }
 
-  // --- Fetch and Render Player Data ---
-  let playerDataResult; // Store the whole result temporarily
+  let playerDataResult;
   try {
     playerDataResult = await fetchPlayerData(
       region,
@@ -731,8 +768,8 @@ async function initializePage() {
       realmSlug,
       characterName,
       token,
-    ); // Fetch ENHANCED data
-    // Pass only the core display data to renderPlayerData
+    );
+
     renderPlayerData(
       playerDataResult,
       region,
@@ -740,43 +777,56 @@ async function initializePage() {
       realmSlug,
       characterName,
     );
-    // Pass the full enhanced data to displayAiSummary
-    await displayAiSummary(playerDataResult); // Uses enhanced data for prompt
 
+    // Initial display of AI summary (will load from cache or trigger generation)
+    await displayAiSummary(playerDataResult, false); // false = don't force regen on initial load
+
+    // --- Event Listeners ---
+    // Ensure elements exist before adding listeners
     if (refreshAiButton) {
       refreshAiButton.addEventListener('click', () => {
-        // Use the playerDataResult captured in the closure
         if (playerDataResult) {
-          displayAiSummary(playerDataResult, true);
+          displayAiSummary(playerDataResult, true); // true = force regeneration
         } else {
           console.warn('Cannot refresh AI summary, player data is missing.');
         }
       });
-    } else {
-      console.warn('Refresh AI button not found.');
     }
-
-    // Copy Text Integration
 
     const copyWrapper = document.querySelector('#copy-ai-wrapper');
     const copyLabel = copyWrapper?.querySelector('.copy-label');
 
-    if (copyWrapper && aiSummaryText) {
+    if (copyWrapper && aiSummaryText && copyLabel) {
       const doCopy = () => {
+        // Get text *directly* from the display element at time of click
         const summary = aiSummaryText.textContent;
-        if (!summary) return;
+        // Basic check to not copy placeholders/errors
+        if (
+          !summary ||
+          summary.startsWith('Generating chronicle...') ||
+          summary.startsWith('Error:') ||
+          summary.startsWith('No chronicle')
+        )
+          return;
 
         navigator.clipboard
           .writeText(summary)
           .then(() => {
             copyLabel.textContent = 'Copied!';
+            copyWrapper.classList.add('copied'); // Add class for visual feedback
             setTimeout(() => {
               copyLabel.textContent = 'Copy';
+              copyWrapper.classList.remove('copied');
             }, 1500);
           })
           .catch((err) => {
             console.error('Clipboard copy failed:', err);
             copyLabel.textContent = 'Error';
+            copyWrapper.classList.add('error');
+            setTimeout(() => {
+              copyLabel.textContent = 'Copy';
+              copyWrapper.classList.remove('error');
+            }, 1500);
           });
       };
 
@@ -787,11 +837,16 @@ async function initializePage() {
           doCopy();
         }
       });
+    } else {
+      console.warn('Copy button elements not found.');
     }
 
-    if (summaryDropdown) {
+    if (summaryDropdown && aiSummaryText && aiTimestamp) {
       summaryDropdown.addEventListener('change', () => {
         const selectedIdx = parseInt(summaryDropdown.value);
+        // Use the playerDataResult captured in the closure for the cache key
+        if (!playerDataResult) return;
+
         const key = `${AI_CACHE_PREFIX}${playerDataResult.region}-${playerDataResult.realmSlug}-${playerDataResult.name.toLowerCase()}-list`;
         const summaries = JSON.parse(localStorage.getItem(key) || '[]');
         const selected = summaries[selectedIdx];
@@ -800,61 +855,76 @@ async function initializePage() {
           aiTimestamp.textContent = `Chronicle generated: ${new Date(selected.timestamp).toLocaleString()}`;
         }
       });
+    } else {
+      console.warn('Summary dropdown or display elements not found.');
     }
 
     const modal = document.querySelector('#delete-confirm-modal');
     const confirmBtn = document.querySelector('#confirm-delete');
     const cancelBtn = document.querySelector('#cancel-delete');
 
-    if (deleteSummaryButton) {
+    if (deleteSummaryButton && modal && confirmBtn && cancelBtn) {
       deleteSummaryButton.addEventListener('click', () => {
+        if (deleteSummaryButton.disabled) return; // Don't show modal if button is disabled
         modal.setAttribute('aria-hidden', 'false');
-        modal.focus(); // Focus modal for accessibility
+        modal.style.display = 'flex'; // Or 'block', ensure it's visible
+        confirmBtn.focus(); // Focus first focusable element in modal
       });
-    }
 
-    if (confirmBtn) {
       confirmBtn.addEventListener('click', () => {
         modal.setAttribute('aria-hidden', 'true');
-        handleDeleteSummary(playerDataResult);
+        modal.style.display = 'none';
+        handleDeleteSummary(playerDataResult); // Use captured playerDataResult
+        if (refreshAiButton) refreshAiButton.focus(); // Return focus reasonably
       });
-    }
 
-    if (cancelBtn) {
       cancelBtn.addEventListener('click', () => {
         modal.setAttribute('aria-hidden', 'true');
+        modal.style.display = 'none';
+        if (deleteSummaryButton) deleteSummaryButton.focus(); // Return focus to trigger button
       });
-    }
 
-    document.addEventListener('keydown', (e) => {
-      if (
-        e.key === 'Escape' &&
-        modal?.getAttribute('aria-hidden') === 'false'
-      ) {
-        modal.setAttribute('aria-hidden', 'true');
-      }
-    });
+      // Close modal on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (
+          e.key === 'Escape' &&
+          modal.getAttribute('aria-hidden') === 'false'
+        ) {
+          modal.setAttribute('aria-hidden', 'true');
+          modal.style.display = 'none';
+          if (deleteSummaryButton) deleteSummaryButton.focus(); // Return focus
+        }
+      });
 
-    // Adding FOCUS trap for accessibility for the modal
-    modal.addEventListener('keydown', (e) => {
-      const focusableElements = modal.querySelectorAll('button');
-      const first = focusableElements[0];
-      const last = focusableElements[focusableElements.length - 1];
+      // Basic Focus Trap for Modal
+      modal.addEventListener('keydown', (e) => {
+        if (modal.getAttribute('aria-hidden') === 'true') return; // Ignore if modal hidden
 
-      if (e.key === 'Tab') {
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          }
-        } else {
-          if (document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
+        const focusableElements = modal.querySelectorAll('button');
+        if (!focusableElements || focusableElements.length === 0) return;
+
+        const first = focusableElements[0];
+        const last = focusableElements[focusableElements.length - 1];
+
+        if (e.key === 'Tab') {
+          if (e.shiftKey) {
+            // Shift + Tab
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            // Tab
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
           }
         }
-      }
-    });
+      });
+    } else {
+      console.warn('Delete confirmation modal elements not found.');
+    }
   } catch (fetchError) {
     showError(`Error loading player data: ${fetchError.message}`);
     if (aiSummaryContainer) aiSummaryContainer.style.display = 'none';

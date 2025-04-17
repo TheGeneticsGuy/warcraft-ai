@@ -1,6 +1,6 @@
 # Warcraft AI Reporter
 
-[![Warcraft AI Reporter](https://i.imgur.com/hp9StIT.jpeg)](https://warcraft-ai-report.netlify.app/)
+[![Warcraft AI Reporter](https://i.imgur.com/hp9StIT.jpeg)](www.azerothreporter.com)
 _Click the image to navigate to the live deployed website on Netlify!_
 
 ## Class Details
@@ -37,7 +37,7 @@ _Follow the demo link below and **CLICK** "Parse Meta Data" to generate_
   content="Explore World of Warcraft characters and realms like never before. Azeroth Reporter uses AI to generate roleplaying, historical-style chronicles and summaries."
 />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://warcraft-ai-report.netlify.app/" />
+<meta property="og:url" content="www.azerothreporter.com" />
 <meta property="og:image" content="/images/link-image.webp" />
 
 <!-- Twitter(X) Card tags -->
@@ -53,7 +53,7 @@ _Follow the demo link below and **CLICK** "Parse Meta Data" to generate_
 <meta name="twitter:image" content="/images/link-image.webp" />
 <meta
   name="twitter:url"
-  content="https://warcraft-ai-report.netlify.app/"
+  content="www.azerothreporter.com"
 />
 ```
 
@@ -90,4 +90,4 @@ const data = await response.json(); // Gemini's AI Generated response
 
 - maxOutputTokens - Limits the number of tokens Gemini will return as a response. This is a protection to prevent the expenditure of your limited tokens, ESPECIALLY if you move to a paid version. Warning, if you request a multiple pargraph response from the AI, but your token limit is set too low, it will cut off the response. Either be specific in that you want response to be within the token limit range, or make it reasonably large that it doesn't hit the limit.
 
-[Click here to view the Warcraft AI Reporter Project!](https://warcraft-ai-report.netlify.app/)
+[Click here to view the Azeroth AI Reporter Project!](www.azerothreporter.com)

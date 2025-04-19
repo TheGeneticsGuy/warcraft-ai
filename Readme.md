@@ -3,59 +3,10 @@
 [![Warcraft AI Reporter](https://i.imgur.com/hp9StIT.jpeg)](https://www.azerothreporter.com)
 _Click the image to navigate to the live deployed website on Netlify!_
 
-## Class Details
-
-**Author:** Aaron Topping
-
-**Class:** WDD 330 - BYU-Idaho, Winter Session 2025
-
-**Professor:** Jordan Boyce
-
 ## Summary of the Project
 
 Explore World of Warcraft through a new lens. Azeroth AI Reporter combines live realm data with AI-generated summaries to deliver lore-inspired histories for realms and characters. Whether you're checking server status or uncovering your character’s legacy, dive into a uniquely personalized view of your World of Warcraft story.
 
-# Meta-Tags enabled:
-
-_Follow the demo link below and **CLICK** "Parse Meta Data" to generate_
-
-[View Meta Tag demo](https://metatags.io/?url=https%3A%2F%2Fwarcraft-ai-report.netlify.app%2F)
-
-```
-<!-- META properties Facebook -->
-<meta
-  name="description"
-  content="Generate AI-assisted summaries and reports for World of Warcraft characters and realms."
-/>
-<meta name="author" content="Aaron Topping" />
-<meta
-  property="og:title"
-  content="Azeroth Reporter - AI Chronicles for WoW"
-/>
-<meta
-  property="og:description"
-  content="Explore World of Warcraft characters and realms like never before. Azeroth Reporter uses AI to generate roleplaying, historical-style chronicles and summaries."
-/>
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://www.azerothreporter.com" />
-<meta property="og:image" content="/images/link-image.webp" />
-
-<!-- Twitter(X) Card tags -->
-<meta name="twitter:card" content="summary" />
-<meta
-  name="twitter:title"
-  content="Azeroth Reporter - AI Chronicles for WoW"
-/>
-<meta
-  name="twitter:description"
-  content="Explore World of Warcraft characters and realms like never before. Azeroth Reporter uses AI to generate roleplaying, historical-style chronicles and summaries."
-/>
-<meta name="twitter:image" content="/images/link-image.webp" />
-<meta
-  name="twitter:url"
-  content="https://www.azerothreporter.com"
-/>
-```
 
 # AI Usage - Google's Gemini 2.0 Flash - FREE (Limited)
 

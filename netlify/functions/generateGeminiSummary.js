@@ -300,7 +300,6 @@ export async function handler(event) {
 
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
 
-  try {
     try {
     const response = await fetch(API_URL, {
       method: 'POST',
